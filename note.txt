@@ -1,0 +1,36 @@
+Auth
+- Email ( @student.chula.ac.th ) Login With Google
+- Username
+- Password
+- interest
+- roles
+
+Tag
+- CRUD
+
+Payment
+- EasySlip
+- Transaction History 
+
+Activity
+- Image
+- Title
+- short_description
+- description
+- เวลากิจกรรม
+- เปิดรับสมัคร, ปิดรับสมัคร
+- max_ผู้สมัคร
+- price
+- Activity Images [max 5]
+- tags หลาย tag ไม่เกิน 2
+
+- สมัครแล้วส่ง email
+
+Activity History
+- ประวัติเข้าร่วมกิจกรรม
+
+[ADMIN]
+นร.เพิ่มกิจกรรมได้ แต่อาจารต้อง Approve (Optional)
+dashboard
+
+WebSocket เงิน

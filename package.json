@@ -1,0 +1,37 @@
+{
+  "name": "chula-academy",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --hot ./src/index.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/multer": "^2.0.0",
+    "@types/pg": "^8.16.0",
+    "drizzle-kit": "^0.31.8"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "drizzle": "^1.4.0",
+    "drizzle-orm": "^0.45.1",
+    "express": "^5.2.1",
+    "google-auth-library": "^10.5.0",
+    "jimp": "^1.6.0",
+    "jsqr": "^1.4.0",
+    "minio": "^8.0.6",
+    "multer": "^2.0.2",
+    "pg": "^8.16.3",
+    "uuid": "^13.0.0",
+    "zod": "^4.3.5"
+  }
+}

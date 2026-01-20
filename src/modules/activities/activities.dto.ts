@@ -1,0 +1,25 @@
+import z from "zod";
+
+export const createActivitySchema = z
+    .object({
+        title: z.string().min(1, { error: "ชื่อกิจกรรมต้องมีอย่างน้อย 1 ตัวอักษร" }),
+        description: z.string().min(1, { error: "รายละเอียดกิจกรรมต้องมีอย่างน้อย 1 ตัวอักษร" }),
+        description_short: z
+            .string()
+            .min(1, { error: "รายละเอียดกิจกรรมต้องมีอย่างน้อย 1 ตัวอักษร" }),
+        max_users: z.coerce.number().min(1, { error: "ผู้เข้าร่วมกิจกรรมต้องมีอย่างน้อย 1 คน" }),
+        price: z.coerce.number().min(0, { error: "ค่าเรียนต้องมีค่ามากกว่าหรือเท่ากับ 0" }),
+        registration_open_at: z.string().transform((val) => new Date(val)),
+        registration_close_at: z.string().transform((val) => new Date(val)),
+        event_start_at: z.string().transform((val) => new Date(val)),
+    })
+    .refine((data) => data.registration_close_at > data.registration_open_at, {
+        error: "วันปิดรับสมัครต้องมาหลังวันเปิดรับสมัคร",
+        path: ["registration_close_at"],
+    })
+    .refine((data) => data.event_start_at > data.registration_close_at, {
+        error: "วันเริ่มกิจกรรมต้องมาหลังวันปิดรับสมัคร",
+        path: ["event_start_at"],
+    });
+
+export type CreateActivityDto = z.infer<typeof createActivitySchema>;
