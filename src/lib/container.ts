@@ -60,12 +60,19 @@ const fileService = new FileService(fileRepository, minioStorage);
 const activityUserRepository = new DrizzleActivityUserRepository();
 const activityUserService = new ActivityUserService(activityUserRepository);
 
+const studentInformationRepository = new DrizzleStudentInformationRepository();
+const studentInformationService = new StudentInformationService(
+    studentInformationRepository,
+    userService
+);
+
 const activityRepository = new DrizzleActivityRepository();
 const activitiesService = new ActivitiesService(
     activityRepository,
     activityUserService,
     userService,
-    fileService
+    fileService,
+    studentInformationService
 );
 const activityController = new ActivityController(activitiesService);
 
@@ -98,11 +105,6 @@ const paymentService = new PaymentService(
 );
 const paymentController = new PaymentController(paymentService);
 
-const studentInformationRepository = new DrizzleStudentInformationRepository();
-const studentInformationService = new StudentInformationService(
-    studentInformationRepository,
-    userService
-);
 const studentInformationController = new StudentInformationController(studentInformationService);
 
 export {

@@ -2,7 +2,7 @@ import type { Response } from "express";
 import type { ActivitiesService } from "./activities.service";
 import type { AuthenticatedRequest } from "../../types/express";
 import { BadRequestError, handleError, NotFoundError } from "../../lib/error";
-import { createActivitySchema } from "./activities.dto";
+import { createActivitySchema, joinActivitySchema } from "./activities.dto";
 import { v4 } from "uuid";
 
 export class ActivityController {
@@ -49,11 +49,15 @@ export class ActivityController {
 
     async joinActivity(req: AuthenticatedRequest, res: Response) {
         try {
-            const activit_id = req.params.id;
+            const activity_id = req.params.id;
 
-            if (!activit_id) throw new BadRequestError("ไม่พบ id");
+            if (!activity_id) throw new BadRequestError("ไม่พบ id");
 
-            this.activityService.joinActivity(req.session.user_id, activit_id);
+            const data = joinActivitySchema.parse(req.body);
+
+            await this.activityService.joinActivity(req.session.user_id, activity_id, data.student_information_id);
+
+            res.json({ message: "สมัครกิจกรรมสำเร็จ" });
         } catch (error) {
             handleError(res, error);
         }

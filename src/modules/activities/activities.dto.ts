@@ -23,3 +23,9 @@ export const createActivitySchema = z
     });
 
 export type CreateActivityDto = z.infer<typeof createActivitySchema>;
+
+export const joinActivitySchema = z.object({
+    student_information_id: z.string().uuid("รหัสข้อมูลนักเรียนไม่ถูกต้อง"),
+});
+
+export type JoinActivityDto = z.infer<typeof joinActivitySchema>;

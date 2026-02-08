@@ -208,7 +208,7 @@ export const activityUsersTable = pgTable(
             .$defaultFn(() => v7())
             .primaryKey(),
         activity_id: uuid().notNull(),
-        user_id: uuid().notNull(),
+        student_information_id: uuid().notNull(),
     },
     (table) => [
         foreignKey({
@@ -216,8 +216,8 @@ export const activityUsersTable = pgTable(
             foreignColumns: [activitiesTable.id],
         }),
         foreignKey({
-            columns: [table.user_id],
-            foreignColumns: [usersTable.id],
+            columns: [table.student_information_id],
+            foreignColumns: [studentInformationTable.id],
         }),
     ]
 );

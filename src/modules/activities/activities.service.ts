@@ -4,6 +4,7 @@ import type { UserService } from "../user/user.service";
 import type { CreateActivityDto } from "./activities.dto";
 import type { FileService } from "../files/files.service";
 import type { ActivityUserService } from "./activity-users.service";
+import type { StudentInformationService } from "../student-information/student-information.service";
 
 type CreateActivityType = CreateActivityDto & { user_id: string; file: Buffer; filename: string };
 
@@ -12,7 +13,8 @@ export class ActivitiesService {
         private readonly activityRepository: ActivityRepository,
         private readonly activityUserService: ActivityUserService,
         private readonly userService: UserService,
-        private readonly fileService: FileService
+        private readonly fileService: FileService,
+        private readonly studentInformationService: StudentInformationService
     ) {}
 
     async createActivity(data: CreateActivityType) {
@@ -84,10 +86,10 @@ export class ActivitiesService {
         return this.activityRepository.getByOwnerId(ownerId);
     }
 
-    async joinActivity(user_id: string, activity_id: string) {
+    async joinActivity(user_id: string, activity_id: string, student_information_id: string) {
         const activity = await this.activityRepository.getById(activity_id);
 
-        if (!activity) throw new NotFoundError("ไม่พบกิจกรรมที่ต้องการอนุมัติ");
+        if (!activity) throw new NotFoundError("ไม่พบกิจกรรมที่ต้องการสมัคร");
 
         if (!activity.approved) throw new ForbiddenError("กิจกรรมนี้ยังไม่ถูกอนุมัติ");
 
@@ -101,6 +103,18 @@ export class ActivitiesService {
             throw new ForbiddenError("กิจกรรมนี้ปิดรับสมัครแล้ว");
         }
 
+        // Verify student information belongs to user
+        const studentInfo = await this.studentInformationService.getStudentInformation(user_id);
+        if (studentInfo.id !== student_information_id) {
+            throw new ForbiddenError("ข้อมูลนักเรียนไม่ถูกต้อง");
+        }
+
+        // Check if already registered
+        const isRegistered = await this.activityUserService.isRegistered(student_information_id, activity_id);
+        if (isRegistered) {
+            throw new ConflictError("นักเรียนคนนี้ได้สมัครกิจกรรมนี้แล้ว");
+        }
+
         const balance = await this.userService.getuserBalance(user_id);
 
         if (balance < activity.price) {
@@ -109,7 +123,7 @@ export class ActivitiesService {
 
         await this.userService.setUserBalance(user_id, balance - activity.price);
 
-        await this.activityUserService.join(user_id, activity_id);
+        await this.activityUserService.join(student_information_id, activity_id);
     }
 
     async approveActivity(activity_id: string) {
