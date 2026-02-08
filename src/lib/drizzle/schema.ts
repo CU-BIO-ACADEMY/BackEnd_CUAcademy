@@ -29,6 +29,32 @@ export const usersTable = pgTable("users", {
     deleted_at: timestamp({ withTimezone: true }),
 });
 
+export const studentInformationTable = pgTable(
+    "user_information",
+    {
+        id: uuid()
+            .$defaultFn(() => v7())
+            .primaryKey(),
+        user_id: uuid().notNull(),
+        prefix: varchar({ length: 255 }).notNull(),
+        full_name: varchar({ length: 255 }).notNull(),
+        education_level: integer().notNull(),
+        school: varchar({ length: 255 }).notNull(),
+        food_allergies: varchar({ length: 255 }),
+        parent_name: varchar({ length: 255 }).notNull(),
+        parent_email: varchar({ length: 255 }).notNull(),
+        secondary_email: varchar({ length: 255 }),
+        created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+        updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => [
+        foreignKey({
+            columns: [table.user_id],
+            foreignColumns: [usersTable.id],
+        }),
+    ]
+) 
+
 export const oAuthAccountTable = pgTable("oauth_account", {
     id: uuid()
         .$defaultFn(() => v7())

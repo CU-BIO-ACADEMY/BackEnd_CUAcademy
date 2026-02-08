@@ -1,0 +1,25 @@
+import { z } from "zod";
+
+export const educationLevelMap: Record<string, number> = {
+    "ม. 2": 2,
+    "ม. 3": 3,
+    "ม. 4": 4,
+    "ม. 5": 5,
+    "ม. 6": 6,
+};
+
+export const createStudentInformationSchema = z.object({
+    prefix: z.string().min(1, "กรุณาเลือกคำนำหน้า"),
+    full_name: z.string().min(1, "กรุณากรอกชื่อ-นามสกุลนักเรียน"),
+    education_level: z.number().int().min(2).max(6),
+    school: z.string().min(1, "กรุณากรอกชื่อโรงเรียน"),
+    food_allergies: z.string().optional(),
+    parent_name: z.string().min(1, "กรุณากรอกชื่อผู้ปกครอง"),
+    parent_email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
+    secondary_email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง").optional(),
+});
+
+export const updateStudentInformationSchema = createStudentInformationSchema.partial();
+
+export type CreateStudentInformationDTO = z.infer<typeof createStudentInformationSchema>;
+export type UpdateStudentInformationDTO = z.infer<typeof updateStudentInformationSchema>;

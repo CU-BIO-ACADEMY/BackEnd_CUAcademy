@@ -30,6 +30,9 @@ import { DrizzleOAuthAccountRepository } from "../modules/oauth-account/oauth-ac
 import { OAuthAccountService } from "../modules/oauth-account/oauth-account.service";
 import { DrizzleActivityUserRepository } from "../modules/activities/activity-users.repository";
 import { ActivityUserService } from "../modules/activities/activity-users.service";
+import { DrizzleStudentInformationRepository } from "../modules/student-information/student-information.repository";
+import { StudentInformationService } from "../modules/student-information/student-information.service";
+import { StudentInformationController } from "../modules/student-information/student-information.controller";
 
 const userRepository = new DrizzleUserRepository();
 const userService = new UserService(userRepository);
@@ -95,10 +98,18 @@ const paymentService = new PaymentService(
 );
 const paymentController = new PaymentController(paymentService);
 
+const studentInformationRepository = new DrizzleStudentInformationRepository();
+const studentInformationService = new StudentInformationService(
+    studentInformationRepository,
+    userService
+);
+const studentInformationController = new StudentInformationController(studentInformationService);
+
 export {
     authMiddleware,
     activityController,
     authController,
     paymentController,
     transactionController,
+    studentInformationController,
 };

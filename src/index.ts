@@ -1,6 +1,7 @@
 import express from "express";
 import cookies from "cookie-parser";
 import cors from "cors";
+import morgan from "morgan";
 import { apiRoute } from "./routes";
 import { authMiddleware } from "./lib/container";
 
@@ -10,15 +11,14 @@ app.set("trust proxy", true);
 
 const allowedOrigins = ["http://localhost:3000"];
 
+app.use(morgan("combined"));
 app.use(
     cors({
         origin: (origin, callback) => {
-            if (!origin) return callback(null, true);
-
-            if (allowedOrigins.includes(origin)) {
-                callback(null, true);
+            if (!origin || allowedOrigins.includes(origin)) {
+                callback(null, origin || true);
             } else {
-                callback(new Error("Not allowed by CORS"));
+                callback(null, false);
             }
         },
         credentials: true,
@@ -46,7 +46,7 @@ app.use(cookies());
 app.use(authMiddleware.session.bind(authMiddleware));
 app.use("/api", apiRoute);
 
-const server = app.listen(8000, () => console.log("Server started on port 8000"));
+const server = app.listen(8000, () => console.log("SERVER IS RUNNING ON PORT 8000"));
 
 const gracefulShutdown = async (signal: string) => {
     console.log(`\n${signal} received. Starting graceful shutdown...`);
