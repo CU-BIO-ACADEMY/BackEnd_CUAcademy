@@ -8,15 +8,18 @@ import type { StudentInformationService } from "../student-information/student-i
 import type { ActivityFilesService } from "./activity-files.service";
 import type { FileType } from "../../lib/drizzle/schema";
 
-export type CreateActivityType = CreateActivityDto & { 
-    user_id: string; 
-    file: Buffer; 
+export type CreateActivityType = CreateActivityDto & {
+    user_id: string;
+    file: Buffer;
     filename: string;
     mimetype: string;
     size: number;
 };
 
-export type CreateActivityWithFilesType = Omit<CreateActivityWithFilesDto, 'attachments_metadata'> & {
+export type CreateActivityWithFilesType = Omit<
+    CreateActivityWithFilesDto,
+    "attachments_metadata"
+> & {
     user_id: string;
     thumbnail: {
         file: Buffer;
@@ -121,7 +124,7 @@ export class ActivitiesService {
         return createdActivity;
     }
 
-    async getActivityWithFiles(id: string) {
+    async getActivityDetail(id: string) {
         const activity = await this.activityRepository.getById(id);
         if (!activity) {
             throw new NotFoundError("Activity not found");
@@ -153,9 +156,11 @@ export class ActivitiesService {
 
     async getActivityById(id: string) {
         const activity = await this.activityRepository.getById(id);
+
         if (!activity) {
             throw new NotFoundError("Activity not found");
         }
+
         return activity;
     }
 
@@ -220,7 +225,10 @@ export class ActivitiesService {
         }
 
         // Check if already registered
-        const isRegistered = await this.activityUserService.isRegistered(student_information_id, activity_id);
+        const isRegistered = await this.activityUserService.isRegistered(
+            student_information_id,
+            activity_id
+        );
         if (isRegistered) {
             throw new ConflictError("นักเรียนคนนี้ได้สมัครกิจกรรมนี้แล้ว");
         }

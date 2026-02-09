@@ -9,6 +9,18 @@ export const activityRoute = Router()
         authMiddleware.requireAuth.bind(authMiddleware),
         activityController.getAllActivities.bind(activityController) as AuthenticatedRequestHandler
     )
+    .get(
+        "/unpublished",
+        authMiddleware.requireAdmin.bind(authMiddleware),
+        activityController.getUnpublishedActivities.bind(
+            activityController
+        ) as AuthenticatedRequestHandler
+    )
+    .get(
+        "/:id",
+        authMiddleware.requireAuth.bind(authMiddleware),
+        activityController.getActivity.bind(activityController) as AuthenticatedRequestHandler
+    )
     .post(
         "/",
         multerUpload.fields([
@@ -27,11 +39,4 @@ export const activityRoute = Router()
         "/:id/approve",
         authMiddleware.requireAdmin.bind(authMiddleware),
         activityController.approve.bind(activityController) as AuthenticatedRequestHandler
-    )
-    .get(
-        "/unpublished",
-        authMiddleware.requireAdmin.bind(authMiddleware),
-        activityController.getUnpublishedActivities.bind(
-            activityController
-        ) as AuthenticatedRequestHandler
     );

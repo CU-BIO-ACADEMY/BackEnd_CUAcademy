@@ -49,3 +49,4 @@ export type JoinActivityDto = z.infer<typeof joinActivitySchema>;
 export type AttachmentMetadata = {
     display_name?: string;
 };
+

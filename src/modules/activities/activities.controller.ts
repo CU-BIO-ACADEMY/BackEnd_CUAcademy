@@ -2,7 +2,11 @@ import type { Response } from "express";
 import type { ActivitiesService } from "./activities.service";
 import type { AuthenticatedRequest } from "../../types/express";
 import { BadRequestError, handleError, NotFoundError } from "../../lib/error";
-import { createActivityWithFilesSchema, joinActivitySchema, type AttachmentMetadata } from "./activities.dto";
+import {
+    createActivityWithFilesSchema,
+    joinActivitySchema,
+    type AttachmentMetadata,
+} from "./activities.dto";
 import { v4 } from "uuid";
 
 export class ActivityController {
@@ -11,14 +15,14 @@ export class ActivityController {
     async create(req: AuthenticatedRequest, res: Response) {
         try {
             const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-            
+
             // Check for thumbnail in files (from multer.fields)
             let thumbnailFile: Express.Multer.File | undefined;
-            
+
             if (files && files.thumbnail && files.thumbnail.length > 0) {
                 thumbnailFile = files.thumbnail[0];
             }
-            
+
             if (!thumbnailFile) {
                 throw new NotFoundError("โปรดใส่ภาพหลัก");
             }
@@ -75,6 +79,46 @@ export class ActivityController {
         }
     }
 
+    async getActivity(req: AuthenticatedRequest, res: Response) {
+        try {
+            const activity_id = req.params.id;
+
+            if (!activity_id) throw new BadRequestError("ไม่พบกิจกรรมนี้");
+
+            const {
+                id,
+                title,
+                price,
+                max_users,
+                thumbnail,
+                attachments,
+                description,
+                event_start_at,
+                users_registered,
+                description_short,
+                registration_open_at,
+                registration_close_at,
+            } = await this.activityService.getActivityDetail(activity_id);
+
+            res.json({
+                id,
+                title,
+                description,
+                description_short,
+                max_users,
+                price,
+                event_start_at,
+                registration_open_at,
+                registration_close_at,
+                users_registered,
+                thumbnail: thumbnail.url,
+                attachments: attachments.map((att) => att.file),
+            });
+        } catch (error) {
+            handleError(res, error);
+        }
+    }
+
     async joinActivity(req: AuthenticatedRequest, res: Response) {
         try {
             const activity_id = req.params.id;
@@ -83,7 +127,11 @@ export class ActivityController {
 
             const data = joinActivitySchema.parse(req.body);
 
-            await this.activityService.joinActivity(req.session.user_id, activity_id, data.student_information_id);
+            await this.activityService.joinActivity(
+                req.session.user_id,
+                activity_id,
+                data.student_information_id
+            );
 
             res.json({ message: "สมัครกิจกรรมสำเร็จ" });
         } catch (error) {
@@ -98,6 +146,8 @@ export class ActivityController {
             if (!activit_id) throw new BadRequestError("ไม่พบ id");
 
             this.activityService.approveActivity(activit_id);
+
+            res.json({ message: "อนุมัติกิจกรรมสําเร็จ" });
         } catch (error) {
             handleError(res, error);
         }

@@ -23,7 +23,8 @@ export class ActivityFilesService {
         file_type: FileType = "attachment"
     ) {
         const ext = data.filename.split(".").pop() || "";
-        const key = `${v4()}.${ext}`;
+        const originalName = data.filename.replace(/\.[^.]+$/, ""); // เอาชื่อไฟล์ไม่รวมนามสกุล
+        const key = `${originalName}-${v4()}.${ext}`;
 
         const file_id = await this.fileService.createFile({
             key,
