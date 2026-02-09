@@ -4,6 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { apiRoute } from "./routes";
 import { authMiddleware } from "./lib/container";
+import { handleError } from "./lib/error";
 
 const app = express();
 
@@ -45,6 +46,11 @@ app.use(
 app.use(cookies());
 app.use(authMiddleware.session.bind(authMiddleware));
 app.use("/api", apiRoute);
+
+// Global error handler
+app.use((err: unknown, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    handleError(res, err);
+});
 
 const server = app.listen(8000, () => console.log("SERVER IS RUNNING ON PORT 8000"));
 

@@ -13,7 +13,7 @@ export const activityRoute = Router()
         "/",
         multerUpload.fields([
             { name: "thumbnail", maxCount: 1 },
-            { name: "attachments", maxCount: 10 }, // Support up to 10 attachments (PDF, DOCX, etc.)
+            { name: "attachments", maxCount: 10 },
         ]),
         authMiddleware.requireAuth.bind(authMiddleware),
         activityController.create.bind(activityController) as AuthenticatedRequestHandler
