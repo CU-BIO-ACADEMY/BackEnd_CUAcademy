@@ -18,7 +18,7 @@ export class PaymentService {
         this.expectedAccountNumber = env.ACCOUNT_NUMBER;
     }
 
-    async createPayment(user_id: string, file: Buffer, filename: string) {
+    async createPayment(user_id: string, file: Buffer, filename: string, mimetype: string, size: number) {
         const code = await readQRCode(file);
 
         const { data } = await this.easySlipService.verifyByPayload(code);
@@ -34,6 +34,9 @@ export class PaymentService {
         const file_id = await this.fileService.createFile({
             key: filename,
             file: file,
+            filename: filename,
+            mimetype: mimetype,
+            size: size,
         });
 
         const transaction_id = await this.transactionService.despositTransaction(user_id, amount);

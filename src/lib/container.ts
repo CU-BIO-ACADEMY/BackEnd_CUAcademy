@@ -12,6 +12,8 @@ import { DrizzleActivityRepository } from "../modules/activities/activities.repo
 import { ActivitiesService } from "../modules/activities/activities.service";
 import { DrizzleActivityTagsRepository } from "../modules/activities/activity-tags.repository";
 import { ActivityTagsService } from "../modules/activities/activity-tags.service";
+import { DrizzleActivityFilesRepository } from "../modules/activities/activity-files.repository";
+import { ActivityFilesService } from "../modules/activities/activity-files.service";
 import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { PaymentController } from "../modules/payment/payment.controller";
 import { PaymentService } from "../modules/payment/payment.service";
@@ -60,6 +62,9 @@ const fileService = new FileService(fileRepository, minioStorage);
 const activityUserRepository = new DrizzleActivityUserRepository();
 const activityUserService = new ActivityUserService(activityUserRepository);
 
+const activityFilesRepository = new DrizzleActivityFilesRepository();
+const activityFilesService = new ActivityFilesService(activityFilesRepository, fileService);
+
 const studentInformationRepository = new DrizzleStudentInformationRepository();
 const studentInformationService = new StudentInformationService(
     studentInformationRepository,
@@ -72,6 +77,7 @@ const activitiesService = new ActivitiesService(
     activityUserService,
     userService,
     fileService,
+    activityFilesService,
     studentInformationService
 );
 const activityController = new ActivityController(activitiesService);

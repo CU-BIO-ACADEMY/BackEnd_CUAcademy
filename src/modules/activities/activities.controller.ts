@@ -2,7 +2,7 @@ import type { Response } from "express";
 import type { ActivitiesService } from "./activities.service";
 import type { AuthenticatedRequest } from "../../types/express";
 import { BadRequestError, handleError, NotFoundError } from "../../lib/error";
-import { createActivitySchema, joinActivitySchema } from "./activities.dto";
+import { createActivityWithFilesSchema, joinActivitySchema, type AttachmentMetadata } from "./activities.dto";
 import { v4 } from "uuid";
 
 export class ActivityController {
@@ -10,25 +10,53 @@ export class ActivityController {
 
     async create(req: AuthenticatedRequest, res: Response) {
         try {
-            if (!req.file) throw new NotFoundError("โปรดใส่ภาพหลัก");
+            const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+            
+            // Check for thumbnail in files (from multer.fields)
+            let thumbnailFile: Express.Multer.File | undefined;
+            
+            if (files && files.thumbnail && files.thumbnail.length > 0) {
+                thumbnailFile = files.thumbnail[0];
+            }
+            
+            if (!thumbnailFile) {
+                throw new NotFoundError("โปรดใส่ภาพหลัก");
+            }
 
-            const ext = req.file.originalname.split(".").pop() || "";
-            const filename = `${v4()}.${ext}`;
+            const attachments = files?.attachments || [];
 
-            const data = createActivitySchema.parse(req.body);
+            const data = createActivityWithFilesSchema.parse(req.body);
+            const attachmentsMetadata: AttachmentMetadata[] = data.attachments_metadata || [];
 
-            await this.activityService.createActivity({
+            const ext = thumbnailFile.originalname.split(".").pop() || "";
+            const thumbnailFilename = `${v4()}.${ext}`;
+
+            // Destructure to exclude attachments_metadata
+            const { attachments_metadata: _, ...activityData } = data;
+
+            await this.activityService.createActivityWithFiles({
                 user_id: req.session.user_id,
-                title: data.title,
-                description: data.description,
-                description_short: data.description_short,
-                max_users: data.max_users,
-                price: data.price,
-                registration_open_at: data.registration_open_at,
+                title: activityData.title,
+                description: activityData.description,
+                description_short: activityData.description_short,
+                max_users: activityData.max_users,
+                price: activityData.price,
+                registration_open_at: activityData.registration_open_at,
                 registration_close_at: data.registration_close_at,
-                event_start_at: data.event_start_at,
-                file: req.file.buffer,
-                filename: filename,
+                event_start_at: activityData.event_start_at,
+                thumbnail: {
+                    file: thumbnailFile.buffer,
+                    filename: thumbnailFilename,
+                    mimetype: thumbnailFile.mimetype,
+                    size: thumbnailFile.size,
+                },
+                attachments: attachments.map((file, index) => ({
+                    file: file.buffer,
+                    filename: `${v4()}.${file.originalname.split(".").pop() || ""}`,
+                    mimetype: file.mimetype,
+                    size: file.size,
+                    display_name: attachmentsMetadata[index]?.display_name || file.originalname,
+                })),
             });
 
             res.json({ message: "สร้างกิจกรรมสําเร็จ" });

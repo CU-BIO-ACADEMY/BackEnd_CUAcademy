@@ -3,26 +3,36 @@ import { NotFoundError } from "../../lib/error";
 import type { MinioStorage } from "../../lib/minio/minio-storage";
 import { v4 } from "uuid";
 
+export type CreateFileInput = {
+    key: string;
+    file: Buffer;
+    filename: string;
+    mimetype: string;
+    size: number;
+};
+
 export class FileService {
     constructor(
         private readonly fileRepository: FileRepository,
         private readonly minioStorage: MinioStorage
     ) {}
 
-    async createFile({ key, file }: { key: string; file: Buffer }) {
+    async createFile({ key, file, filename, mimetype, size }: CreateFileInput) {
         const bucket = "chula";
-
         const file_id = v4();
 
         await this.fileRepository.create({
             id: file_id,
             bucket: bucket,
             key: key,
+            filename: filename,
+            mimetype: mimetype,
+            size: size,
         });
 
         await this.minioStorage.uploadFile(bucket, key, file);
 
-        return file_id
+        return file_id;
     }
 
     async getFileById(id: string) {

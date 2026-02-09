@@ -14,6 +14,8 @@ import {
 export const transactionTypeEnum = pgEnum("transaction_type", ["topup", "payment"]);
 export const topupStatusEnum = pgEnum("topup_status", ["pending", "completed", "failed"]);
 export const roleEnum = pgEnum("user_roles", ["member", "admin"])
+export const fileTypeEnum = pgEnum("file_type", ["thumbnail", "attachment", "content"])
+export type FileType = typeof fileTypeEnum.enumValues[number];
 
 export const usersTable = pgTable("users", {
     id: uuid()
@@ -126,6 +128,9 @@ export const filesTable = pgTable("files", {
         .primaryKey(),
     bucket: varchar({ length: 255 }).notNull(),
     key: varchar({ length: 255 }).notNull(),
+    filename: varchar({ length: 255 }).notNull(),
+    mimetype: varchar({ length: 100 }).notNull(),
+    size: integer().notNull(),
     created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -188,6 +193,29 @@ export const activityImagesTable = pgTable(
             .primaryKey(),
         activity_id: uuid().notNull(),
         file_id: uuid().notNull(),
+    },
+    (table) => [
+        foreignKey({
+            columns: [table.activity_id],
+            foreignColumns: [activitiesTable.id],
+        }),
+        foreignKey({
+            columns: [table.file_id],
+            foreignColumns: [filesTable.id],
+        }),
+    ]
+);
+
+export const activityFilesTable = pgTable(
+    "activity_files",
+    {
+        id: uuid()
+            .$defaultFn(() => v7())
+            .primaryKey(),
+        activity_id: uuid().notNull(),
+        file_id: uuid().notNull(),
+        file_type: fileTypeEnum("file_type").notNull().default("attachment"),
+        display_name: varchar({ length: 255 }),
     },
     (table) => [
         foreignKey({

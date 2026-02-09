@@ -12,11 +12,14 @@ export class PaymentController {
             if (!req.file) throw new NotFoundError("ไม่พบไฟล์ QR code");
 
             const ext = req.file.originalname.split(".").pop() || "";
+            const filename = `${v4()}.${ext}`;
 
             await this.paymentService.createPayment(
                 req.session.user_id,
                 req.file.buffer,
-                `${v4()}.${ext}`
+                filename,
+                req.file.mimetype,
+                req.file.size
             );
 
             res.json({ message: "เติมเครดิตสําเร็จ" });

@@ -24,8 +24,28 @@ export const createActivitySchema = z
 
 export type CreateActivityDto = z.infer<typeof createActivitySchema>;
 
+// Schema for creating activity with attachments (files metadata from multipart form)
+export const createActivityWithFilesSchema = createActivitySchema.extend({
+    // attachments metadata as JSON string (file info like display_name)
+    attachments_metadata: z.string().optional().transform((val) => {
+        if (!val) return [];
+        try {
+            return JSON.parse(val);
+        } catch {
+            return [];
+        }
+    }),
+});
+
+export type CreateActivityWithFilesDto = z.infer<typeof createActivityWithFilesSchema>;
+
 export const joinActivitySchema = z.object({
     student_information_id: z.string().uuid("รหัสข้อมูลนักเรียนไม่ถูกต้อง"),
 });
 
 export type JoinActivityDto = z.infer<typeof joinActivitySchema>;
+
+// Attachment metadata type
+export type AttachmentMetadata = {
+    display_name?: string;
+};

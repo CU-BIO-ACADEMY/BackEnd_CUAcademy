@@ -2,7 +2,15 @@ import { eq, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
 import { filesTable } from "../../lib/drizzle/schema";
 import { db } from "../../lib/drizzle";
 
-type CreateFileType = InferInsertModel<typeof filesTable>;
+export type CreateFileType = {
+    id: string;
+    bucket: string;
+    key: string;
+    filename: string;
+    mimetype: string;
+    size: number;
+};
+
 type GetFileType = InferSelectModel<typeof filesTable>;
 
 export interface FileRepository {
