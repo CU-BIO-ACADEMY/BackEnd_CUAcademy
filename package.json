@@ -4,7 +4,8 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "dev": "bun --hot ./src/index.ts"
+    "dev": "bun --hot ./src/index.ts",
+    "build": "bun --compile --compile --target=bun-linux-x64 ./src/index.ts --outfile cu-backend"
   },
   "devDependencies": {
     "@types/bun": "latest",
