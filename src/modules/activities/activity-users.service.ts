@@ -11,10 +11,16 @@ export class ActivityUserService {
         await this.activityUsersRepository.leave(student_information_id, schedule_id);
     }
 
-    async getRegisteredUsers(schedule_id: string): Promise<string[]> {
+    async getRegisteredUsers(schedule_id: string) {
         const users = await this.activityUsersRepository.getRegisteredUsers(schedule_id);
 
-        return users.map((user) => user.student_information_id);
+        return users;
+    }
+
+    async getRegisteredUsersWithInfo(schedule_id: string) {
+        const users = await this.activityUsersRepository.getRegisteredUsersWithInfo(schedule_id);
+
+        return users;
     }
 
     async isRegistered(student_information_id: string, schedule_id: string): Promise<boolean> {

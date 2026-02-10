@@ -158,14 +158,15 @@ export class ActivitiesService {
         const attachments = await this.activityFilesService.getActivityFiles(id);
         const schedules = await this.activitySchedulesRepository.getByActivityId(id);
 
-        // ดึงจำนวนคนลงทะเบียนของแต่ละ schedule
+        // ดึงข้อมูล schedules พร้อม users ที่ลงทะเบียนในแต่ละรอบ
         const schedulesWithUsers = await Promise.all(
             schedules.map(async (schedule) => {
-                const users = await this.activityUserService.getRegisteredUsers(schedule.id);
+                const users = await this.activityUserService.getRegisteredUsersWithInfo(schedule.id);
                 return {
                     ...schedule,
                     users_registered: users.length,
                     available_spots: Math.max(0, schedule.max_users - users.length),
+                    registered_users: users,
                 };
             })
         );
@@ -222,14 +223,23 @@ export class ActivitiesService {
                 const file = await this.fileService.getFileById(activity.thumbnail_file_id);
                 const schedules = await this.activitySchedulesRepository.getByActivityId(activity.id);
 
-                // คำนวณจำนวนคนลงทะเบียนทั้งหมดและราคา
-                const totalUsers = await Promise.all(
-                    schedules.map(async (s) => {
-                        const users = await this.activityUserService.getRegisteredUsers(s.id);
-                        return users.length;
+                // ดึงข้อมูล schedules พร้อม users ที่ลงทะเบียนในแต่ละรอบ
+                const schedulesWithUsers = await Promise.all(
+                    schedules.map(async (schedule) => {
+                        const users = await this.activityUserService.getRegisteredUsersWithInfo(schedule.id);
+                        return {
+                            ...schedule,
+                            users_registered: users.length,
+                            registered_users: users,
+                        };
                     })
                 );
-                const usersRegistered = totalUsers.reduce((sum, count) => sum + count, 0);
+
+                // คำนวณจำนวนคนลงทะเบียนทั้งหมดและราคา
+                const usersRegistered = schedulesWithUsers.reduce(
+                    (sum, s) => sum + s.users_registered,
+                    0
+                );
 
                 const prices = schedules.map((s) => s.price);
                 const minPrice = prices.length > 0 ? Math.min(...prices) : 0;
@@ -244,6 +254,7 @@ export class ActivitiesService {
                     next_event_start_at: schedules.length > 0
                         ? [...schedules].sort((a, b) => a.event_start_at.getTime() - b.event_start_at.getTime())[0]!.event_start_at
                         : undefined,
+                    schedules: schedulesWithUsers,
                 };
             })
         );

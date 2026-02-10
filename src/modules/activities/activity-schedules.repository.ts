@@ -5,6 +5,8 @@ import { activitySchedulesTable } from "../../lib/drizzle/schema";
 type CreateActivityScheduleType = InferInsertModel<typeof activitySchedulesTable>;
 export type GetActivityScheduleType = InferSelectModel<typeof activitySchedulesTable>;
 
+
+
 export interface ActivitySchedulesRepository {
     createMany(activity_id: string, schedules: Omit<CreateActivityScheduleType, "activity_id" | "id">[]): Promise<void>;
     getByActivityId(activity_id: string): Promise<GetActivityScheduleType[]>;

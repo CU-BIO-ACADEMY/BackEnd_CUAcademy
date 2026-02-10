@@ -89,42 +89,9 @@ export class ActivityController {
 
             if (!activity_id) throw new BadRequestError("ไม่พบกิจกรรมนี้");
 
-            const {
-                id,
-                title,
-                price,
-                price_range,
-                thumbnail,
-                attachments,
-                description,
-                schedules,
-                users_registered,
-                description_short,
-                registration_open_at,
-                registration_close_at,
-            } = await this.activityService.getActivityDetail(activity_id);
+            const data = await this.activityService.getActivityDetail(activity_id);
 
-            res.json({
-                id,
-                title,
-                description,
-                description_short,
-                price,
-                price_range,
-                registration_open_at,
-                registration_close_at,
-                users_registered,
-                thumbnail: thumbnail.url,
-                attachments: attachments.map((att) => att.file),
-                schedules: schedules.map((s) => ({
-                    id: s.id,
-                    event_start_at: s.event_start_at,
-                    price: s.price,
-                    max_users: s.max_users,
-                    users_registered: s.users_registered,
-                    available_spots: s.available_spots,
-                })),
-            });
+            res.json(data);
         } catch (error) {
             handleError(res, error);
         }
