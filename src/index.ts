@@ -10,18 +10,10 @@ const app = express();
 
 app.set("trust proxy", true);
 
-const allowedOrigins = ["http://localhost:3000"];
-
 app.use(morgan("combined"));
 app.use(
     cors({
-        origin: (origin, callback) => {
-            if (!origin || allowedOrigins.includes(origin)) {
-                callback(null, origin || true);
-            } else {
-                callback(null, false);
-            }
-        },
+        origin: true,
         credentials: true,
     })
 );
