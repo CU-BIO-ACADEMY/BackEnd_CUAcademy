@@ -1,5 +1,5 @@
 import { eq, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
-import { activitiesTable } from "../../lib/drizzle/schema";
+import { activitiesTable, activitySchedulesTable } from "../../lib/drizzle/schema";
 import { db } from "../../lib/drizzle";
 
 type CreateActivityType = InferInsertModel<typeof activitiesTable>;
@@ -9,7 +9,7 @@ export interface ActivityRepository {
     create(data: CreateActivityType): Promise<void>;
     getById(id: string): Promise<GetActivityType>;
     getPublished(): Promise<GetActivityType[]>;
-    getUnpublished(): Promise<GetActivityType[]>
+    getUnpublished(): Promise<GetActivityType[]>;
     getByOwnerId(ownerId: string): Promise<GetActivityType[]>;
     approve(activity_id: string): Promise<void>;
 }

@@ -145,10 +145,7 @@ export const activitiesTable = pgTable(
         thumbnail_file_id: uuid().notNull(),
         description: text().notNull(),
         description_short: text().notNull(),
-        max_users: integer().notNull(),
-        price: integer().notNull(),
         approved: boolean().notNull().default(false),
-        event_start_at: timestamp({ withTimezone: true }).notNull(),
         registration_open_at: timestamp({ withTimezone: true }).notNull(),
         registration_close_at: timestamp({ withTimezone: true }).notNull(),
     },
@@ -160,6 +157,25 @@ export const activitiesTable = pgTable(
         foreignKey({
             columns: [table.thumbnail_file_id],
             foreignColumns: [filesTable.id],
+        }),
+    ]
+);
+
+export const activitySchedulesTable = pgTable(
+    "activity_schedules",
+    {
+        id: uuid()
+            .$defaultFn(() => v7())
+            .primaryKey(),
+        activity_id: uuid().notNull(),
+        event_start_at: timestamp({ withTimezone: true }).notNull(),
+        price: integer().notNull(),
+        max_users: integer().notNull(),
+    },
+    (table) => [
+        foreignKey({
+            columns: [table.activity_id],
+            foreignColumns: [activitiesTable.id],
         }),
     ]
 );
@@ -235,13 +251,13 @@ export const activityUsersTable = pgTable(
         id: uuid()
             .$defaultFn(() => v7())
             .primaryKey(),
-        activity_id: uuid().notNull(),
+        schedule_id: uuid().notNull(),
         student_information_id: uuid().notNull(),
     },
     (table) => [
         foreignKey({
-            columns: [table.activity_id],
-            foreignColumns: [activitiesTable.id],
+            columns: [table.schedule_id],
+            foreignColumns: [activitySchedulesTable.id],
         }),
         foreignKey({
             columns: [table.student_information_id],
@@ -256,14 +272,14 @@ export const activityHistoryTable = pgTable(
         id: uuid()
             .$defaultFn(() => v7())
             .primaryKey(),
-        activity_id: uuid().notNull(),
+        schedule_id: uuid().notNull(),
         user_id: uuid().notNull(),
         joined_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
     },
     (table) => [
         foreignKey({
-            columns: [table.activity_id],
-            foreignColumns: [activitiesTable.id],
+            columns: [table.schedule_id],
+            foreignColumns: [activitySchedulesTable.id],
         }),
         foreignKey({
             columns: [table.user_id],

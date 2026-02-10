@@ -8,6 +8,12 @@ import {
     type AttachmentMetadata,
 } from "./activities.dto";
 import { v4 } from "uuid";
+import z from "zod";
+
+// Schema สำหรับการสมัครกิจกรรม (ต้องระบุ schedule_id)
+const joinActivityWithScheduleSchema = joinActivitySchema.extend({
+    schedule_id: z.string().uuid("รหัสรอบไม่ถูกต้อง"),
+});
 
 export class ActivityController {
     constructor(private readonly activityService: ActivitiesService) {}
@@ -43,11 +49,9 @@ export class ActivityController {
                 title: activityData.title,
                 description: activityData.description,
                 description_short: activityData.description_short,
-                max_users: activityData.max_users,
-                price: activityData.price,
                 registration_open_at: activityData.registration_open_at,
                 registration_close_at: data.registration_close_at,
-                event_start_at: activityData.event_start_at,
+                schedules: activityData.schedules,
                 thumbnail: {
                     file: thumbnailFile.buffer,
                     filename: thumbnailFilename,
@@ -89,11 +93,11 @@ export class ActivityController {
                 id,
                 title,
                 price,
-                max_users,
+                price_range,
                 thumbnail,
                 attachments,
                 description,
-                event_start_at,
+                schedules,
                 users_registered,
                 description_short,
                 registration_open_at,
@@ -105,14 +109,21 @@ export class ActivityController {
                 title,
                 description,
                 description_short,
-                max_users,
                 price,
-                event_start_at,
+                price_range,
                 registration_open_at,
                 registration_close_at,
                 users_registered,
                 thumbnail: thumbnail.url,
                 attachments: attachments.map((att) => att.file),
+                schedules: schedules.map((s) => ({
+                    id: s.id,
+                    event_start_at: s.event_start_at,
+                    price: s.price,
+                    max_users: s.max_users,
+                    users_registered: s.users_registered,
+                    available_spots: s.available_spots,
+                })),
             });
         } catch (error) {
             handleError(res, error);
@@ -125,11 +136,12 @@ export class ActivityController {
 
             if (!activity_id) throw new BadRequestError("ไม่พบ id");
 
-            const data = joinActivitySchema.parse(req.body);
+            const data = joinActivityWithScheduleSchema.parse(req.body);
 
             await this.activityService.joinActivity(
                 req.session.user_id,
                 activity_id,
+                data.schedule_id,
                 data.student_information_id
             );
 

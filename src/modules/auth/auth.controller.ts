@@ -33,7 +33,7 @@ export class AuthController {
                 sameSite: "lax",
             });
 
-            res.redirect(`${env.FRONTEND_URL}/home`);
+            res.redirect(`${env.FRONTEND_URL}`);
         } catch (error) {
             handleError(res, error);
         }

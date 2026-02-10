@@ -1,5 +1,14 @@
 import z from "zod";
 
+// Schema สำหรับแต่ละรอบ/วันของกิจกรรม
+export const activityScheduleSchema = z.object({
+    event_start_at: z.string().transform((val) => new Date(val)),
+    price: z.coerce.number().min(0, { error: "ค่าเรียนต้องมีค่ามากกว่าหรือเท่ากับ 0" }),
+    max_users: z.coerce.number().min(1, { error: "ผู้เข้าร่วมกิจกรรมต้องมีอย่างน้อย 1 คน" }),
+});
+
+export type ActivityScheduleDto = z.infer<typeof activityScheduleSchema>;
+
 export const createActivitySchema = z
     .object({
         title: z.string().min(1, { error: "ชื่อกิจกรรมต้องมีอย่างน้อย 1 ตัวอักษร" }),
@@ -7,20 +16,38 @@ export const createActivitySchema = z
         description_short: z
             .string()
             .min(1, { error: "รายละเอียดกิจกรรมต้องมีอย่างน้อย 1 ตัวอักษร" }),
-        max_users: z.coerce.number().min(1, { error: "ผู้เข้าร่วมกิจกรรมต้องมีอย่างน้อย 1 คน" }),
-        price: z.coerce.number().min(0, { error: "ค่าเรียนต้องมีค่ามากกว่าหรือเท่ากับ 0" }),
         registration_open_at: z.string().transform((val) => new Date(val)),
         registration_close_at: z.string().transform((val) => new Date(val)),
-        event_start_at: z.string().transform((val) => new Date(val)),
+        // รับ schedules เป็น JSON string จาก form-data
+        schedules: z.string().transform((val) => {
+            try {
+                const parsed = JSON.parse(val);
+                return z.array(activityScheduleSchema).parse(parsed);
+            } catch {
+                throw new Error("รูปแบบข้อมูลกำหนดการไม่ถูกต้อง");
+            }
+        }),
     })
     .refine((data) => data.registration_close_at > data.registration_open_at, {
         error: "วันปิดรับสมัครต้องมาหลังวันเปิดรับสมัคร",
         path: ["registration_close_at"],
     })
-    .refine((data) => data.event_start_at > data.registration_close_at, {
-        error: "วันเริ่มกิจกรรมต้องมาหลังวันปิดรับสมัคร",
-        path: ["event_start_at"],
-    });
+    .refine((data) => data.schedules.length > 0, {
+        error: "ต้องมีกำหนดการอย่างน้อย 1 รอบ",
+        path: ["schedules"],
+    })
+    .refine(
+        (data) => {
+            // ตรวจสอบว่าทุกรอบต้องเริ่มหลังวันปิดรับสมัคร
+            return data.schedules.every(
+                (schedule) => schedule.event_start_at > data.registration_close_at
+            );
+        },
+        {
+            error: "วันเริ่มกิจกรรมทุกรอบต้องมาหลังวันปิดรับสมัคร",
+            path: ["schedules"],
+        }
+    );
 
 export type CreateActivityDto = z.infer<typeof createActivitySchema>;
 

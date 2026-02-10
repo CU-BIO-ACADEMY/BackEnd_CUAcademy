@@ -32,6 +32,7 @@ import { DrizzleOAuthAccountRepository } from "../modules/oauth-account/oauth-ac
 import { OAuthAccountService } from "../modules/oauth-account/oauth-account.service";
 import { DrizzleActivityUserRepository } from "../modules/activities/activity-users.repository";
 import { ActivityUserService } from "../modules/activities/activity-users.service";
+import { DrizzleActivitySchedulesRepository } from "../modules/activities/activity-schedules.repository";
 import { DrizzleStudentInformationRepository } from "../modules/student-information/student-information.repository";
 import { StudentInformationService } from "../modules/student-information/student-information.service";
 import { StudentInformationController } from "../modules/student-information/student-information.controller";
@@ -72,8 +73,10 @@ const studentInformationService = new StudentInformationService(
 );
 
 const activityRepository = new DrizzleActivityRepository();
+const activitySchedulesRepository = new DrizzleActivitySchedulesRepository();
 const activitiesService = new ActivitiesService(
     activityRepository,
+    activitySchedulesRepository,
     activityUserService,
     userService,
     fileService,
