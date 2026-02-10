@@ -13,9 +13,9 @@ import {
 
 export const transactionTypeEnum = pgEnum("transaction_type", ["topup", "payment"]);
 export const topupStatusEnum = pgEnum("topup_status", ["pending", "completed", "failed"]);
-export const roleEnum = pgEnum("user_roles", ["member", "admin"])
-export const fileTypeEnum = pgEnum("file_type", ["thumbnail", "attachment", "content"])
-export type FileType = typeof fileTypeEnum.enumValues[number];
+export const roleEnum = pgEnum("user_roles", ["member", "admin"]);
+export const fileTypeEnum = pgEnum("file_type", ["thumbnail", "attachment", "content"]);
+export type FileType = (typeof fileTypeEnum.enumValues)[number];
 
 export const usersTable = pgTable("users", {
     id: uuid()
@@ -46,6 +46,7 @@ export const studentInformationTable = pgTable(
         parent_name: varchar({ length: 255 }).notNull(),
         parent_email: varchar({ length: 255 }).notNull(),
         secondary_email: varchar({ length: 255 }),
+        phone_number: varchar({ length: 20 }),
         created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
         updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
     },
@@ -55,24 +56,28 @@ export const studentInformationTable = pgTable(
             foreignColumns: [usersTable.id],
         }),
     ]
-) 
+);
 
-export const oAuthAccountTable = pgTable("oauth_account", {
-    id: uuid()
-        .$defaultFn(() => v7())
-        .primaryKey(),
-    user_id: uuid().notNull(),
-    provider: varchar({ length: 255 }).notNull(),
-    provider_account_id: varchar({ length: 255 }).notNull(),
-    created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
-    deleted_at: timestamp({ withTimezone: true }),
-}, (table) => [
-    foreignKey({
-        columns: [table.user_id],
-        foreignColumns: [usersTable.id],
-    })
-])
+export const oAuthAccountTable = pgTable(
+    "oauth_account",
+    {
+        id: uuid()
+            .$defaultFn(() => v7())
+            .primaryKey(),
+        user_id: uuid().notNull(),
+        provider: varchar({ length: 255 }).notNull(),
+        provider_account_id: varchar({ length: 255 }).notNull(),
+        created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+        updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+        deleted_at: timestamp({ withTimezone: true }),
+    },
+    (table) => [
+        foreignKey({
+            columns: [table.user_id],
+            foreignColumns: [usersTable.id],
+        }),
+    ]
+);
 
 export const sessionsTable = pgTable(
     "sessions",

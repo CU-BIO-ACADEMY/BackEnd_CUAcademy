@@ -32,6 +32,7 @@ export class StudentInformationService {
             parent_name: data.parent_name,
             parent_email: data.parent_email,
             secondary_email: data.secondary_email || null,
+            phone_number: data.phone_number || null,
         });
     }
 
@@ -69,6 +70,7 @@ export class StudentInformationService {
             parent_name: data.parent_name,
             parent_email: data.parent_email,
             secondary_email: data.secondary_email,
+            phone_number: data.phone_number,
         });
     }
 

@@ -17,6 +17,7 @@ export const createStudentInformationSchema = z.object({
     parent_name: z.string().min(1, "กรุณากรอกชื่อผู้ปกครอง"),
     parent_email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง"),
     secondary_email: z.string().email("รูปแบบอีเมลไม่ถูกต้อง").optional(),
+    phone_number: z.string().min(1, "กรุณากรอกเบอร์โทรศัพท์")
 });
 
 export const updateStudentInformationSchema = createStudentInformationSchema.partial();
