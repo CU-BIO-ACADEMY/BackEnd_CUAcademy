@@ -5,15 +5,10 @@ import { BadRequestError, handleError, NotFoundError } from "../../lib/error";
 import {
     createActivityWithFilesSchema,
     joinActivitySchema,
+    updateRegistrationStatusSchema,
     type AttachmentMetadata,
 } from "./activities.dto";
 import { v4 } from "uuid";
-import z from "zod";
-
-// Schema สำหรับการสมัครกิจกรรม (ต้องระบุ schedule_id)
-const joinActivityWithScheduleSchema = joinActivitySchema.extend({
-    schedule_id: z.string().uuid("รหัสรอบไม่ถูกต้อง"),
-});
 
 export class ActivityController {
     constructor(private readonly activityService: ActivitiesService) {}
@@ -103,16 +98,55 @@ export class ActivityController {
 
             if (!activity_id) throw new BadRequestError("ไม่พบ id");
 
-            const data = joinActivityWithScheduleSchema.parse(req.body);
+            const data = joinActivitySchema.parse(req.body);
+
+            let paymentFile: { file: Buffer; filename: string; mimetype: string; size: number } | undefined;
+            const file = req.file as Express.Multer.File | undefined;
+            if (file) {
+                const ext = file.originalname.split(".").pop() || "";
+                paymentFile = {
+                    file: file.buffer,
+                    filename: `${v4()}.${ext}`,
+                    mimetype: file.mimetype,
+                    size: file.size,
+                };
+            }
 
             await this.activityService.joinActivity(
                 req.session.user_id,
                 activity_id,
-                data.schedule_id,
-                data.student_information_id
+                data.schedule_ids,
+                data.student_information_id,
+                paymentFile
             );
 
-            res.json({ message: "สมัครกิจกรรมสำเร็จ" });
+            res.json({ message: "สมัครกิจกรรมสำเร็จ รอการอนุมัติ" });
+        } catch (error) {
+            handleError(res, error);
+        }
+    }
+
+    async getPendingRegistrations(req: AuthenticatedRequest, res: Response) {
+        try {
+            const activity_id = req.params.id;
+            if (!activity_id) throw new BadRequestError("ไม่พบ id");
+
+            const registrations = await this.activityService.getActivityPendingRegistrations(activity_id);
+            res.json(registrations);
+        } catch (error) {
+            handleError(res, error);
+        }
+    }
+
+    async updateRegistrationStatus(req: AuthenticatedRequest, res: Response) {
+        try {
+            const registration_id = req.params.registrationId;
+            if (!registration_id) throw new BadRequestError("ไม่พบ id");
+
+            const data = updateRegistrationStatusSchema.parse(req.body);
+            await this.activityService.updateRegistrationStatus(registration_id, data.status);
+
+            res.json({ message: "อัพเดทสถานะสำเร็จ" });
         } catch (error) {
             handleError(res, error);
         }

@@ -16,6 +16,11 @@ export const topupStatusEnum = pgEnum("topup_status", ["pending", "completed", "
 export const roleEnum = pgEnum("user_roles", ["member", "admin"]);
 export const fileTypeEnum = pgEnum("file_type", ["thumbnail", "attachment", "content"]);
 export type FileType = (typeof fileTypeEnum.enumValues)[number];
+export const activityPaymentStatusEnum = pgEnum("activity_payment_status", [
+    "pending",
+    "approved",
+    "rejected",
+]);
 
 export const usersTable = pgTable("users", {
     id: uuid()
@@ -258,6 +263,11 @@ export const activityUsersTable = pgTable(
             .primaryKey(),
         schedule_id: uuid().notNull(),
         student_information_id: uuid().notNull(),
+        payment_status: activityPaymentStatusEnum("payment_status")
+            .notNull()
+            .default("pending"),
+        payment_file_id: uuid(),
+        created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
     },
     (table) => [
         foreignKey({
@@ -267,6 +277,10 @@ export const activityUsersTable = pgTable(
         foreignKey({
             columns: [table.student_information_id],
             foreignColumns: [studentInformationTable.id],
+        }),
+        foreignKey({
+            columns: [table.payment_file_id],
+            foreignColumns: [filesTable.id],
         }),
     ]
 );

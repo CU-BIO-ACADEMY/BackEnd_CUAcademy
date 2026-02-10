@@ -1,4 +1,4 @@
-import { NotFoundError, ConflictError, BadRequestError } from "../../lib/error";
+import { NotFoundError, ForbiddenError } from "../../lib/error";
 import type { StudentInformationRepository } from "./student-information.repository";
 import type { UserService } from "../user/user.service";
 import type { CreateStudentInformationDTO, UpdateStudentInformationDTO } from "./student-information.dto";
@@ -15,11 +15,6 @@ export class StudentInformationService {
         const user = await this.userService.getUserById(userId);
         if (!user) {
             throw new NotFoundError("ไม่พบผู้ใช้");
-        }
-
-        const exists = await this.studentInformationRepository.existsByUserId(userId);
-        if (exists) {
-            throw new ConflictError("ผู้ใช้มีข้อมูลนักเรียนอยู่แล้ว กรุณาใช้การอัพเดทแทน");
         }
 
         await this.studentInformationRepository.create({
@@ -50,18 +45,31 @@ export class StudentInformationService {
         return info;
     }
 
-    async updateStudentInformation(userId: string, data: UpdateStudentInformationDTO): Promise<void> {
+    async getAllStudentInformation(userId: string): Promise<InferSelectModel<typeof studentInformationTable>[]> {
         const user = await this.userService.getUserById(userId);
         if (!user) {
             throw new NotFoundError("ไม่พบผู้ใช้");
         }
 
-        const exists = await this.studentInformationRepository.existsByUserId(userId);
-        if (!exists) {
-            throw new NotFoundError("ไม่พบข้อมูลนักเรียน กรุณาสร้างข้อมูลก่อน");
+        return await this.studentInformationRepository.getAllByUserId(userId);
+    }
+
+    async updateStudentInformation(
+        userId: string,
+        studentInfoId: string,
+        data: UpdateStudentInformationDTO
+    ): Promise<void> {
+        const user = await this.userService.getUserById(userId);
+        if (!user) {
+            throw new NotFoundError("ไม่พบผู้ใช้");
         }
 
-        await this.studentInformationRepository.update(userId, {
+        const exists = await this.studentInformationRepository.existsByIdAndUserId(studentInfoId, userId);
+        if (!exists) {
+            throw new NotFoundError("ไม่พบข้อมูลนักเรียน หรือคุณไม่มีสิทธิ์แก้ไข");
+        }
+
+        await this.studentInformationRepository.updateById(studentInfoId, {
             prefix: data.prefix,
             full_name: data.full_name,
             education_level: data.education_level,
@@ -74,18 +82,18 @@ export class StudentInformationService {
         });
     }
 
-    async deleteStudentInformation(userId: string): Promise<void> {
+    async deleteStudentInformation(userId: string, studentInfoId: string): Promise<void> {
         const user = await this.userService.getUserById(userId);
         if (!user) {
             throw new NotFoundError("ไม่พบผู้ใช้");
         }
 
-        const exists = await this.studentInformationRepository.existsByUserId(userId);
+        const exists = await this.studentInformationRepository.existsByIdAndUserId(studentInfoId, userId);
         if (!exists) {
-            throw new NotFoundError("ไม่พบข้อมูลนักเรียน");
+            throw new NotFoundError("ไม่พบข้อมูลนักเรียน หรือคุณไม่มีสิทธิ์ลบ");
         }
 
-        await this.studentInformationRepository.delete(userId);
+        await this.studentInformationRepository.deleteById(studentInfoId);
     }
 
     async hasStudentInformation(userId: string): Promise<boolean> {

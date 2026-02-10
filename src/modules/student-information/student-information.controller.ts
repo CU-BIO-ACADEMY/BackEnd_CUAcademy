@@ -2,7 +2,7 @@ import type { Response } from "express";
 import type { StudentInformationService } from "./student-information.service";
 import type { AuthenticatedRequest } from "../../types/express";
 import { handleError, BadRequestError } from "../../lib/error";
-import { createStudentInformationSchema, updateStudentInformationSchema, educationLevelMap } from "./student-information.dto";
+import { createStudentInformationSchema, updateStudentInformationSchema } from "./student-information.dto";
 
 export class StudentInformationController {
     constructor(private readonly studentInformationService: StudentInformationService) {}
@@ -29,11 +29,26 @@ export class StudentInformationController {
         }
     }
 
+    async getAll(req: AuthenticatedRequest, res: Response) {
+        try {
+            const infos = await this.studentInformationService.getAllStudentInformation(req.session.user_id);
+
+            res.json(infos);
+        } catch (error) {
+            handleError(res, error);
+        }
+    }
+
     async update(req: AuthenticatedRequest, res: Response) {
         try {
+            const { id } = req.params;
+            if (!id) {
+                throw new BadRequestError("กรุณาระบุรหัสข้อมูลนักเรียน");
+            }
+
             const data = updateStudentInformationSchema.parse(req.body);
 
-            await this.studentInformationService.updateStudentInformation(req.session.user_id, data);
+            await this.studentInformationService.updateStudentInformation(req.session.user_id, id, data);
 
             res.json({ message: "อัพเดทข้อมูลนักเรียนสำเร็จ" });
         } catch (error) {
@@ -43,7 +58,12 @@ export class StudentInformationController {
 
     async delete(req: AuthenticatedRequest, res: Response) {
         try {
-            await this.studentInformationService.deleteStudentInformation(req.session.user_id);
+            const { id } = req.params;
+            if (!id) {
+                throw new BadRequestError("กรุณาระบุรหัสข้อมูลนักเรียน");
+            }
+
+            await this.studentInformationService.deleteStudentInformation(req.session.user_id, id);
 
             res.json({ message: "ลบข้อมูลนักเรียนสำเร็จ" });
         } catch (error) {

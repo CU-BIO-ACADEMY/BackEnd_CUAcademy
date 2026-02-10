@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { activityController, authMiddleware } from "../lib/container";
 import type { AuthenticatedRequestHandler } from "../types/express";
-import { multerUpload } from "../lib/multer";
+import { multerUpload, multerUploadImage } from "../lib/multer";
 
 export const activityRoute = Router()
     .get(
@@ -21,6 +21,11 @@ export const activityRoute = Router()
         authMiddleware.requireAuth.bind(authMiddleware),
         activityController.getActivity.bind(activityController) as AuthenticatedRequestHandler
     )
+    .get(
+        "/:id/registrations/pending",
+        authMiddleware.requireAdmin.bind(authMiddleware),
+        activityController.getPendingRegistrations.bind(activityController) as AuthenticatedRequestHandler
+    )
     .post(
         "/",
         multerUpload.fields([
@@ -32,6 +37,7 @@ export const activityRoute = Router()
     )
     .post(
         "/:id/join",
+        multerUploadImage.single("slip"),
         authMiddleware.requireAuth.bind(authMiddleware),
         activityController.joinActivity.bind(activityController) as AuthenticatedRequestHandler
     )
@@ -39,4 +45,9 @@ export const activityRoute = Router()
         "/:id/approve",
         authMiddleware.requireAdmin.bind(authMiddleware),
         activityController.approve.bind(activityController) as AuthenticatedRequestHandler
+    )
+    .patch(
+        "/registrations/:registrationId/status",
+        authMiddleware.requireAdmin.bind(authMiddleware),
+        activityController.updateRegistrationStatus.bind(activityController) as AuthenticatedRequestHandler
     );

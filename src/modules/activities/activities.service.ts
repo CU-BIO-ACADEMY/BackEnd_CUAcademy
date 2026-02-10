@@ -281,8 +281,9 @@ export class ActivitiesService {
     async joinActivity(
         user_id: string,
         activity_id: string,
-        schedule_id: string,
-        student_information_id: string
+        schedule_ids: string[],
+        student_information_id: string,
+        paymentFile?: { file: Buffer; filename: string; mimetype: string; size: number }
     ) {
         const activity = await this.activityRepository.getById(activity_id);
 
@@ -292,6 +293,8 @@ export class ActivitiesService {
 
         const now = new Date();
 
+        console.log(now, activity.registration_open_at)
+
         if (now < activity.registration_open_at) {
             throw new ForbiddenError("กิจกรรมนี้ไม่เปิดรับสมัคร");
         }
@@ -300,56 +303,71 @@ export class ActivitiesService {
             throw new ForbiddenError("กิจกรรมนี้ปิดรับสมัครแล้ว");
         }
 
-        // ตรวจสอบว่า schedule นี้เป็นของ activity นี้จริงๆ
-        const schedule = await this.activitySchedulesRepository.getById(schedule_id);
-        if (!schedule || schedule.activity_id !== activity_id) {
-            throw new NotFoundError("ไม่พบรอบที่ต้องการสมัคร");
-        }
-
-        // ตรวจสอบว่าถึงเวลาเริ่มกิจกรรมแล้วหรือยัง
-        if (now > schedule.event_start_at) {
-            throw new ForbiddenError("รอบนี้เริ่มกิจกรรมไปแล้ว");
-        }
-
         // Verify student information belongs to user
         const studentInfo = await this.studentInformationService.getStudentInformation(user_id);
         if (studentInfo.id !== student_information_id) {
             throw new ForbiddenError("ข้อมูลนักเรียนไม่ถูกต้อง");
         }
 
-        // Check if already registered for this schedule
-        const isRegistered = await this.activityUserService.isRegistered(
-            student_information_id,
-            schedule_id
-        );
-        if (isRegistered) {
-            throw new ConflictError("นักเรียนคนนี้ได้สมัครรอบนี้แล้ว");
-        }
+        // Validate each schedule
+        for (const schedule_id of schedule_ids) {
+            const schedule = await this.activitySchedulesRepository.getById(schedule_id);
+            if (!schedule || schedule.activity_id !== activity_id) {
+                throw new NotFoundError("ไม่พบรอบที่ต้องการสมัคร");
+            }
 
-        // Check if already registered for any schedule of this activity
-        const allSchedules = await this.activitySchedulesRepository.getByActivityId(activity_id);
-        for (const s of allSchedules) {
-            const registered = await this.activityUserService.isRegistered(student_information_id, s.id);
-            if (registered) {
-                throw new ConflictError("นักเรียนคนนี้ได้สมัครกิจกรรมนี้ในรอบอื่นแล้ว");
+            if (now > schedule.event_start_at) {
+                throw new ForbiddenError("รอบนี้เริ่มกิจกรรมไปแล้ว");
+            }
+
+            const isRegistered = await this.activityUserService.isRegistered(
+                student_information_id,
+                schedule_id
+            );
+            if (isRegistered) {
+                throw new ConflictError("นักเรียนคนนี้ได้สมัครรอบนี้แล้ว");
+            }
+
+            const registeredCount = await this.activityUserService.getRegisteredCount(schedule_id);
+            if (registeredCount >= schedule.max_users) {
+                throw new ForbiddenError("รอบนี้เต็มแล้ว");
             }
         }
 
-        // Check if schedule is full
-        const registeredCount = await this.activityUserService.getRegisteredCount(schedule_id);
-        if (registeredCount >= schedule.max_users) {
-            throw new ForbiddenError("รอบนี้เต็มแล้ว");
+        // Upload payment slip if provided
+        let payment_file_id: string | undefined;
+        if (paymentFile) {
+            payment_file_id = await this.fileService.createFile({
+                file: paymentFile.file,
+                key: paymentFile.filename,
+                filename: paymentFile.filename,
+                mimetype: paymentFile.mimetype,
+                size: paymentFile.size,
+            });
         }
 
-        const balance = await this.userService.getuserBalance(user_id);
+        await this.activityUserService.joinMany(
+            student_information_id,
+            schedule_ids,
+            payment_file_id
+        );
+    }
 
-        if (balance < schedule.price) {
-            throw new ForbiddenError("ยอดเงินไม่เพียงพอ");
-        }
+    async getActivityPendingRegistrations(activity_id: string) {
+        const activity = await this.activityRepository.getById(activity_id);
+        if (!activity) throw new NotFoundError("ไม่พบกิจกรรม");
 
-        await this.userService.setUserBalance(user_id, balance - schedule.price);
+        const schedules = await this.activitySchedulesRepository.getByActivityId(activity_id);
+        const schedule_ids = schedules.map((s) => s.id);
 
-        await this.activityUserService.join(student_information_id, schedule_id);
+        return this.activityUserService.getPendingByScheduleIds(schedule_ids);
+    }
+
+    async updateRegistrationStatus(registration_id: string, status: "approved" | "rejected") {
+        const registration = await this.activityUserService.getById(registration_id);
+        if (!registration) throw new NotFoundError("ไม่พบการลงทะเบียน");
+
+        await this.activityUserService.updatePaymentStatus(registration_id, status);
     }
 
     async approveActivity(activity_id: string) {

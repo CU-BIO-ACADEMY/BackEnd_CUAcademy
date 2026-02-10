@@ -68,9 +68,17 @@ export type CreateActivityWithFilesDto = z.infer<typeof createActivityWithFilesS
 
 export const joinActivitySchema = z.object({
     student_information_id: z.string().uuid("รหัสข้อมูลนักเรียนไม่ถูกต้อง"),
+    schedule_ids: z.string().transform((val) => {
+        const parsed = JSON.parse(val);
+        return z.array(z.string().uuid()).min(1, "ต้องเลือกอย่างน้อย 1 รอบ").parse(parsed);
+    }),
 });
 
 export type JoinActivityDto = z.infer<typeof joinActivitySchema>;
+
+export const updateRegistrationStatusSchema = z.object({
+    status: z.enum(["approved", "rejected"]),
+});
 
 // Attachment metadata type
 export type AttachmentMetadata = {
