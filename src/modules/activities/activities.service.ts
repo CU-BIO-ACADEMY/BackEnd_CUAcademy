@@ -158,10 +158,10 @@ export class ActivitiesService {
         const attachments = await this.activityFilesService.getActivityFiles(id);
         const schedules = await this.activitySchedulesRepository.getByActivityId(id);
 
-        // ดึงข้อมูล schedules พร้อม users ที่ลงทะเบียนในแต่ละรอบ
         const schedulesWithUsers = await Promise.all(
             schedules.map(async (schedule) => {
                 const users = await this.activityUserService.getRegisteredUsersWithInfo(schedule.id);
+
                 return {
                     ...schedule,
                     users_registered: users.length,
@@ -171,7 +171,6 @@ export class ActivitiesService {
             })
         );
 
-        // คำนวณจำนวนคนลงทะเบียนทั้งหมดและราคาต่ำสุด-สูงสุด
         const totalUsersRegistered = schedulesWithUsers.reduce(
             (sum, s) => sum + s.users_registered,
             0
@@ -292,8 +291,6 @@ export class ActivitiesService {
         if (!activity.approved) throw new ForbiddenError("กิจกรรมนี้ยังไม่ถูกอนุมัติ");
 
         const now = new Date();
-
-        console.log(now, activity.registration_open_at)
 
         if (now < activity.registration_open_at) {
             throw new ForbiddenError("กิจกรรมนี้ไม่เปิดรับสมัคร");

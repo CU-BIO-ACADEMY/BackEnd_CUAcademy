@@ -1,14 +1,34 @@
+import type { FileService } from "../files/files.service";
 import type { ActivityUsersRepository, PendingRegistration } from "./activity-users.repository";
 
 export class ActivityUserService {
-    constructor(private readonly activityUsersRepository: ActivityUsersRepository) {}
+    constructor(
+        private readonly activityUsersRepository: ActivityUsersRepository,
+        public readonly fileService: FileService
+    ) {}
 
-    async join(student_information_id: string, schedule_id: string, payment_file_id?: string): Promise<void> {
-        await this.activityUsersRepository.join(student_information_id, schedule_id, payment_file_id);
+    async join(
+        student_information_id: string,
+        schedule_id: string,
+        payment_file_id?: string
+    ): Promise<void> {
+        await this.activityUsersRepository.join(
+            student_information_id,
+            schedule_id,
+            payment_file_id
+        );
     }
 
-    async joinMany(student_information_id: string, schedule_ids: string[], payment_file_id?: string): Promise<void> {
-        await this.activityUsersRepository.joinMany(student_information_id, schedule_ids, payment_file_id);
+    async joinMany(
+        student_information_id: string,
+        schedule_ids: string[],
+        payment_file_id?: string
+    ): Promise<void> {
+        await this.activityUsersRepository.joinMany(
+            student_information_id,
+            schedule_ids,
+            payment_file_id
+        );
     }
 
     async leave(student_information_id: string, schedule_id: string): Promise<void> {
@@ -20,7 +40,18 @@ export class ActivityUserService {
     }
 
     async getRegisteredUsersWithInfo(schedule_id: string) {
-        return this.activityUsersRepository.getRegisteredUsersWithInfo(schedule_id);
+        const users = await this.activityUsersRepository.getRegisteredUsersWithInfo(schedule_id);
+
+        return Promise.all(
+            users.map(async (user) => {
+                const file = await this.fileService.getFileById(user.payment_file_id!);
+
+                return {
+                    ...user,
+                    payment_file_url: file.url,
+                };
+            })
+        );
     }
 
     async isRegistered(student_information_id: string, schedule_id: string): Promise<boolean> {

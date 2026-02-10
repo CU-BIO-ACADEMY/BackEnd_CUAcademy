@@ -61,7 +61,7 @@ const fileRepository = new DrizzleFileRepository();
 const fileService = new FileService(fileRepository, minioStorage);
 
 const activityUserRepository = new DrizzleActivityUserRepository();
-const activityUserService = new ActivityUserService(activityUserRepository);
+const activityUserService = new ActivityUserService(activityUserRepository, fileService);
 
 const activityFilesRepository = new DrizzleActivityFilesRepository();
 const activityFilesService = new ActivityFilesService(activityFilesRepository, fileService);

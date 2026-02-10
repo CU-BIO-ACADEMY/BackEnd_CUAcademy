@@ -9,6 +9,9 @@ export type RegisteredUserWithInfo = {
     id: string;
     schedule_id: string;
     student_information_id: string;
+    payment_status: "pending" | "approved" | "rejected";
+    payment_file_id: string | null;
+    created_at: Date;
     student_info: {
         id: string;
         user_id: string;
@@ -109,6 +112,7 @@ export class DrizzleActivityUserRepository implements ActivityUsersRepository {
                 activity_user: activityUsersTable,
                 student_info: studentInformationTable,
                 user: usersTable,
+                payment_file: filesTable,
             })
             .from(activityUsersTable)
             .innerJoin(
@@ -119,12 +123,19 @@ export class DrizzleActivityUserRepository implements ActivityUsersRepository {
                 usersTable,
                 eq(studentInformationTable.user_id, usersTable.id)
             )
+            .leftJoin(
+                filesTable,
+                eq(activityUsersTable.payment_file_id, filesTable.id)
+            )
             .where(eq(activityUsersTable.schedule_id, schedule_id));
 
         return result.map((row) => ({
             id: row.activity_user.id,
             schedule_id: row.activity_user.schedule_id,
             student_information_id: row.activity_user.student_information_id,
+            payment_status: row.activity_user.payment_status,
+            payment_file_id: row.activity_user.payment_file_id,
+            created_at: row.activity_user.created_at,
             student_info: row.student_info
                 ? {
                     id: row.student_info.id,
