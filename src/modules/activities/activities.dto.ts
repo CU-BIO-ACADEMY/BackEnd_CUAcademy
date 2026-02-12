@@ -85,3 +85,12 @@ export type AttachmentMetadata = {
     display_name?: string;
 };
 
+export const upsertEmailTemplateSchema = z.object({
+    subject: z.string().min(1, { error: "กรุณากรอกหัวข้อ Email" }),
+    body: z.string().min(1, { error: "กรุณากรอกเนื้อหา Email" }),
+});
+
+export const sendEmailsSchema = z.object({
+    registration_ids: z.array(z.string().uuid()).min(1, { error: "กรุณาเลือกผู้สมัครอย่างน้อย 1 คน" }),
+});
+

@@ -50,4 +50,19 @@ export const activityRoute = Router()
         "/registrations/:registrationId/status",
         authMiddleware.requireAdmin.bind(authMiddleware),
         activityController.updateRegistrationStatus.bind(activityController) as AuthenticatedRequestHandler
+    )
+    .get(
+        "/:id/email-template",
+        authMiddleware.requireAdmin.bind(authMiddleware),
+        activityController.getEmailTemplate.bind(activityController) as AuthenticatedRequestHandler
+    )
+    .put(
+        "/:id/email-template",
+        authMiddleware.requireAdmin.bind(authMiddleware),
+        activityController.upsertEmailTemplate.bind(activityController) as AuthenticatedRequestHandler
+    )
+    .post(
+        "/:id/send-emails",
+        authMiddleware.requireAdmin.bind(authMiddleware),
+        activityController.sendEmails.bind(activityController) as AuthenticatedRequestHandler
     );

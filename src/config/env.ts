@@ -21,6 +21,9 @@ const envSchema = z.object({
 
     EASYSLIP_API_KEY: z.string().min(1, "EASYSLIP_API_KEY is required"),
     ACCOUNT_NUMBER: z.string().min(1, "ACCOUNT_NUMBER is required"),
+
+    RESEND_API_KEY: z.string().min(1, "RESEND_API_KEY is required"),
+    RESEND_FROM_EMAIL: z.string().email("RESEND_FROM_EMAIL must be a valid email"),
 });
 
 const parseEnv = () => {
@@ -41,6 +44,8 @@ const parseEnv = () => {
         console.log("[ENV] FRONTEND_URL:", parsed.FRONTEND_URL);
         console.log("[ENV] EASYSLIP_API_KEY:", maskSensitive(parsed.EASYSLIP_API_KEY));
         console.log("[ENV] ACCOUNT_NUMBER:", maskSensitive(parsed.ACCOUNT_NUMBER));
+        console.log("[ENV] RESEND_API_KEY:", maskSensitive(parsed.RESEND_API_KEY));
+        console.log("[ENV] RESEND_FROM_EMAIL:", parsed.RESEND_FROM_EMAIL);
         console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
         return parsed;

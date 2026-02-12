@@ -1,17 +1,23 @@
 import type { Response } from "express";
 import type { ActivitiesService } from "./activities.service";
+import type { EmailTemplateService } from "./email-template.service";
 import type { AuthenticatedRequest } from "../../types/express";
 import { BadRequestError, handleError, NotFoundError } from "../../lib/error";
 import {
     createActivityWithFilesSchema,
     joinActivitySchema,
+    sendEmailsSchema,
     updateRegistrationStatusSchema,
+    upsertEmailTemplateSchema,
     type AttachmentMetadata,
 } from "./activities.dto";
 import { v4 } from "uuid";
 
 export class ActivityController {
-    constructor(private readonly activityService: ActivitiesService) {}
+    constructor(
+        private readonly activityService: ActivitiesService,
+        private readonly emailTemplateService: EmailTemplateService
+    ) {}
 
     async create(req: AuthenticatedRequest, res: Response) {
         try {
@@ -171,6 +177,48 @@ export class ActivityController {
             const activities = await this.activityService.getUnpublishedActivities();
 
             res.json(activities);
+        } catch (error) {
+            handleError(res, error);
+        }
+    }
+
+    async getEmailTemplate(req: AuthenticatedRequest, res: Response) {
+        try {
+            const activityId = req.params.id;
+            if (!activityId) throw new BadRequestError("ไม่พบ id");
+
+            const template = await this.emailTemplateService.getByActivityId(activityId);
+            if (!template) throw new NotFoundError("ไม่พบรูปแบบ Email");
+
+            res.json(template);
+        } catch (error) {
+            handleError(res, error);
+        }
+    }
+
+    async upsertEmailTemplate(req: AuthenticatedRequest, res: Response) {
+        try {
+            const activityId = req.params.id;
+            if (!activityId) throw new BadRequestError("ไม่พบ id");
+
+            const data = upsertEmailTemplateSchema.parse(req.body);
+            await this.emailTemplateService.upsert(activityId, data.subject, data.body);
+
+            res.json({ message: "บันทึกรูปแบบ Email สำเร็จ" });
+        } catch (error) {
+            handleError(res, error);
+        }
+    }
+
+    async sendEmails(req: AuthenticatedRequest, res: Response) {
+        try {
+            const activityId = req.params.id;
+            if (!activityId) throw new BadRequestError("ไม่พบ id");
+
+            const data = sendEmailsSchema.parse(req.body);
+            const result = await this.emailTemplateService.sendEmails(activityId, data.registration_ids);
+
+            res.json({ message: `ส่งอีเมลสำเร็จ ${result.sent} ฉบับ`, sent: result.sent });
         } catch (error) {
             handleError(res, error);
         }

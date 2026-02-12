@@ -9,6 +9,7 @@ import {
     text,
     pgEnum,
     boolean,
+    unique,
 } from "drizzle-orm/pg-core";
 
 export const transactionTypeEnum = pgEnum("transaction_type", ["topup", "payment"]);
@@ -304,6 +305,27 @@ export const activityHistoryTable = pgTable(
             columns: [table.user_id],
             foreignColumns: [usersTable.id],
         }),
+    ]
+);
+
+export const emailTemplatesTable = pgTable(
+    "email_templates",
+    {
+        id: uuid()
+            .$defaultFn(() => v7())
+            .primaryKey(),
+        activity_id: uuid().notNull(),
+        subject: text().notNull(),
+        body: text().notNull(),
+        created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+        updated_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    },
+    (table) => [
+        foreignKey({
+            columns: [table.activity_id],
+            foreignColumns: [activitiesTable.id],
+        }),
+        unique().on(table.activity_id),
     ]
 );
 

@@ -18,6 +18,7 @@ import { AuthMiddleware } from "../middlewares/auth.middleware";
 import { PaymentController } from "../modules/payment/payment.controller";
 import { PaymentService } from "../modules/payment/payment.service";
 import { EasySlipService } from "../modules/thrid-party/easy-slip/easy-slip.service";
+import { ResendService } from "../modules/thrid-party/resend/resend.service";
 import { DrizzleFileRepository } from "../modules/files/files.repository";
 import { FileService } from "../modules/files/files.service";
 import { MinioStorage } from "./minio/minio-storage";
@@ -27,6 +28,8 @@ import { TransactionService } from "../modules/transaction/transaction.service";
 import { DrizzleTopupTransactionRepository } from "../modules/transaction/topup-transaction.repository";
 import { TopupTransactionService } from "../modules/transaction/topup-transaction.service";
 import { ActivityController } from "../modules/activities/activities.controller";
+import { DrizzleEmailTemplateRepository } from "../modules/activities/email-template.repository";
+import { EmailTemplateService } from "../modules/activities/email-template.service";
 import { TransactionController } from "../modules/transaction/transaction.controller";
 import { DrizzleOAuthAccountRepository } from "../modules/oauth-account/oauth-account.repository";
 import { OAuthAccountService } from "../modules/oauth-account/oauth-account.service";
@@ -83,7 +86,10 @@ const activitiesService = new ActivitiesService(
     activityFilesService,
     studentInformationService
 );
-const activityController = new ActivityController(activitiesService);
+const resendService = new ResendService();
+const emailTemplateRepository = new DrizzleEmailTemplateRepository();
+const emailTemplateService = new EmailTemplateService(emailTemplateRepository, activitiesService, resendService);
+const activityController = new ActivityController(activitiesService, emailTemplateService);
 
 const activityTagsRepository = new DrizzleActivityTagsRepository();
 const activityTagsService = new ActivityTagsService(
