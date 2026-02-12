@@ -144,6 +144,7 @@ export class DrizzleActivityUserRepository implements ActivityUsersRepository {
                     full_name: row.student_info.full_name,
                     education_level: row.student_info.education_level,
                     school: row.student_info.school,
+                    food_allergies: row.student_info.food_allergies
                 }
                 : null,
             user: row.user
