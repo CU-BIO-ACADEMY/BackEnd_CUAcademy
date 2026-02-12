@@ -49,6 +49,8 @@ services:
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
       EASYSLIP_API_KEY: ${EASYSLIP_API_KEY}
       ACCOUNT_NUMBER: ${ACCOUNT_NUMBER}
+      RESEND_API_KEY: ${RESEND_API_KEY}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
     depends_on:
       - postgres
       - minio
