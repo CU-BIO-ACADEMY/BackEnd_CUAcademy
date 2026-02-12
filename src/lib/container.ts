@@ -59,7 +59,9 @@ const userInterestsService = new UserInterestsService(
     userService
 );
 
-const minioStorage = new MinioStorage(minioClient);
+import { env } from "../config/env";
+
+const minioStorage = new MinioStorage(minioClient, env.MINIO_PUBLIC_URL);
 const fileRepository = new DrizzleFileRepository();
 const fileService = new FileService(fileRepository, minioStorage);
 

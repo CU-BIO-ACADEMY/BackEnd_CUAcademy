@@ -12,6 +12,7 @@ const envSchema = z.object({
         .transform((val) => val === "true"),
     MINIO_ACCESS_KEY: z.string().min(1, "MINIO_ACCESS_KEY is required"),
     MINIO_SECRET_KEY: z.string().min(1, "MINIO_SECRET_KEY is required"),
+    MINIO_PUBLIC_URL: z.string().optional(),
 
     GOOGLE_CLIENT_ID: z.string().min(1, "GOOGLE_CLIENT_ID is required"),
     GOOGLE_CLIENT_SECRET: z.string().min(1, "GOOGLE_CLIENT_SECRET is required"),
@@ -38,6 +39,7 @@ const parseEnv = () => {
         console.log("[ENV] MINIO_USE_SSL:", parsed.MINIO_USE_SSL);
         console.log("[ENV] MINIO_ACCESS_KEY:", maskSensitive(parsed.MINIO_ACCESS_KEY));
         console.log("[ENV] MINIO_SECRET_KEY:", maskSensitive(parsed.MINIO_SECRET_KEY));
+        console.log("[ENV] MINIO_PUBLIC_URL:", parsed.MINIO_PUBLIC_URL ?? "(not set)");
         console.log("[ENV] GOOGLE_CLIENT_ID:", maskSensitive(parsed.GOOGLE_CLIENT_ID));
         console.log("[ENV] GOOGLE_CLIENT_SECRET:", maskSensitive(parsed.GOOGLE_CLIENT_SECRET));
         console.log("[ENV] GOOGLE_REDIRECT_URI:", parsed.GOOGLE_REDIRECT_URI);
