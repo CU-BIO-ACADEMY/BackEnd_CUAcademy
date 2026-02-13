@@ -160,7 +160,9 @@ export class ActivitiesService {
 
         const schedulesWithUsers = await Promise.all(
             schedules.map(async (schedule) => {
-                const users = await this.activityUserService.getRegisteredUsersWithInfo(schedule.id);
+                const users = await this.activityUserService.getRegisteredUsersWithInfo(
+                    schedule.id
+                );
 
                 return {
                     ...schedule,
@@ -220,12 +222,16 @@ export class ActivitiesService {
         const activitiesWithThumbnails = await Promise.all(
             validActivities.map(async (activity) => {
                 const file = await this.fileService.getFileById(activity.thumbnail_file_id);
-                const schedules = await this.activitySchedulesRepository.getByActivityId(activity.id);
+                const schedules = await this.activitySchedulesRepository.getByActivityId(
+                    activity.id
+                );
 
                 // ดึงข้อมูล schedules พร้อม users ที่ลงทะเบียนในแต่ละรอบ
                 const schedulesWithUsers = await Promise.all(
                     schedules.map(async (schedule) => {
-                        const users = await this.activityUserService.getRegisteredUsersWithInfo(schedule.id);
+                        const users = await this.activityUserService.getRegisteredUsersWithInfo(
+                            schedule.id
+                        );
                         return {
                             ...schedule,
                             users_registered: users.length,
@@ -250,9 +256,12 @@ export class ActivitiesService {
                     users_registered: usersRegistered,
                     price_range: prices.length > 1 ? { min: minPrice, max: maxPrice } : undefined,
                     price: prices.length === 1 ? prices[0] : undefined,
-                    next_event_start_at: schedules.length > 0
-                        ? [...schedules].sort((a, b) => a.event_start_at.getTime() - b.event_start_at.getTime())[0]!.event_start_at
-                        : undefined,
+                    next_event_start_at:
+                        schedules.length > 0
+                            ? [...schedules].sort(
+                                  (a, b) => a.event_start_at.getTime() - b.event_start_at.getTime()
+                              )[0]!.event_start_at
+                            : undefined,
                     schedules: schedulesWithUsers,
                 };
             })
@@ -302,9 +311,10 @@ export class ActivitiesService {
 
         // Verify student information belongs to user
         const studentInfo = await this.studentInformationService.getStudentInformation(user_id);
-        if (studentInfo.id !== student_information_id) {
-            throw new ForbiddenError("ข้อมูลนักเรียนไม่ถูกต้อง");
-        }
+
+        const isMatch = studentInfo.some((info) => info.id === student_information_id);
+
+        if (!isMatch) throw new ForbiddenError("ข้อมูลนักเรียนไม่ถูกต้อง");
 
         // Validate each schedule
         for (const schedule_id of schedule_ids) {

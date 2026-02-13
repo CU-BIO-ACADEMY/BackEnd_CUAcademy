@@ -1,6 +1,5 @@
 import z from "zod";
 
-// Schema สำหรับแต่ละรอบ/วันของกิจกรรม
 export const activityScheduleSchema = z.object({
     event_start_at: z.string().transform((val) => new Date(val)),
     price: z.coerce.number().min(0, { error: "ค่าเรียนต้องมีค่ามากกว่าหรือเท่ากับ 0" }),
@@ -18,7 +17,6 @@ export const createActivitySchema = z
             .min(1, { error: "รายละเอียดกิจกรรมต้องมีอย่างน้อย 1 ตัวอักษร" }),
         registration_open_at: z.string().transform((val) => new Date(val)),
         registration_close_at: z.string().transform((val) => new Date(val)),
-        // รับ schedules เป็น JSON string จาก form-data
         schedules: z.string().transform((val) => {
             try {
                 const parsed = JSON.parse(val);
@@ -38,7 +36,6 @@ export const createActivitySchema = z
     })
     .refine(
         (data) => {
-            // ตรวจสอบว่าทุกรอบต้องเริ่มหลังวันปิดรับสมัคร
             return data.schedules.every(
                 (schedule) => schedule.event_start_at > data.registration_close_at
             );
@@ -51,9 +48,7 @@ export const createActivitySchema = z
 
 export type CreateActivityDto = z.infer<typeof createActivitySchema>;
 
-// Schema for creating activity with attachments (files metadata from multipart form)
 export const createActivityWithFilesSchema = createActivitySchema.extend({
-    // attachments metadata as JSON string (file info like display_name)
     attachments_metadata: z.string().optional().transform((val) => {
         if (!val) return [];
         try {
@@ -67,7 +62,7 @@ export const createActivityWithFilesSchema = createActivitySchema.extend({
 export type CreateActivityWithFilesDto = z.infer<typeof createActivityWithFilesSchema>;
 
 export const joinActivitySchema = z.object({
-    student_information_id: z.string().uuid("รหัสข้อมูลนักเรียนไม่ถูกต้อง"),
+    student_information_id: z.uuid("รหัสข้อมูลนักเรียนไม่ถูกต้อง"),
     schedule_ids: z.string().transform((val) => {
         const parsed = JSON.parse(val);
         return z.array(z.string().uuid()).min(1, "ต้องเลือกอย่างน้อย 1 รอบ").parse(parsed);
@@ -80,7 +75,6 @@ export const updateRegistrationStatusSchema = z.object({
     status: z.enum(["approved", "rejected"]),
 });
 
-// Attachment metadata type
 export type AttachmentMetadata = {
     display_name?: string;
 };

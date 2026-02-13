@@ -1,7 +1,10 @@
 import { NotFoundError, ForbiddenError } from "../../lib/error";
 import type { StudentInformationRepository } from "./student-information.repository";
 import type { UserService } from "../user/user.service";
-import type { CreateStudentInformationDTO, UpdateStudentInformationDTO } from "./student-information.dto";
+import type {
+    CreateStudentInformationDTO,
+    UpdateStudentInformationDTO,
+} from "./student-information.dto";
 import type { InferSelectModel } from "drizzle-orm";
 import type { studentInformationTable } from "../../lib/drizzle/schema";
 
@@ -11,7 +14,10 @@ export class StudentInformationService {
         private userService: UserService
     ) {}
 
-    async createStudentInformation(userId: string, data: CreateStudentInformationDTO): Promise<void> {
+    async createStudentInformation(
+        userId: string,
+        data: CreateStudentInformationDTO
+    ): Promise<void> {
         const user = await this.userService.getUserById(userId);
         if (!user) {
             throw new NotFoundError("ไม่พบผู้ใช้");
@@ -31,13 +37,15 @@ export class StudentInformationService {
         });
     }
 
-    async getStudentInformation(userId: string): Promise<InferSelectModel<typeof studentInformationTable>> {
+    async getStudentInformation(
+        userId: string
+    ): Promise<InferSelectModel<typeof studentInformationTable>[]> {
         const user = await this.userService.getUserById(userId);
         if (!user) {
             throw new NotFoundError("ไม่พบผู้ใช้");
         }
 
-        const info = await this.studentInformationRepository.getByUserId(userId);
+        const info = await this.studentInformationRepository.getAllByUserId(userId);
         if (!info) {
             throw new NotFoundError("ไม่พบข้อมูลนักเรียน");
         }
@@ -45,7 +53,9 @@ export class StudentInformationService {
         return info;
     }
 
-    async getAllStudentInformation(userId: string): Promise<InferSelectModel<typeof studentInformationTable>[]> {
+    async getAllStudentInformation(
+        userId: string
+    ): Promise<InferSelectModel<typeof studentInformationTable>[]> {
         const user = await this.userService.getUserById(userId);
         if (!user) {
             throw new NotFoundError("ไม่พบผู้ใช้");
@@ -64,7 +74,10 @@ export class StudentInformationService {
             throw new NotFoundError("ไม่พบผู้ใช้");
         }
 
-        const exists = await this.studentInformationRepository.existsByIdAndUserId(studentInfoId, userId);
+        const exists = await this.studentInformationRepository.existsByIdAndUserId(
+            studentInfoId,
+            userId
+        );
         if (!exists) {
             throw new NotFoundError("ไม่พบข้อมูลนักเรียน หรือคุณไม่มีสิทธิ์แก้ไข");
         }
@@ -88,7 +101,10 @@ export class StudentInformationService {
             throw new NotFoundError("ไม่พบผู้ใช้");
         }
 
-        const exists = await this.studentInformationRepository.existsByIdAndUserId(studentInfoId, userId);
+        const exists = await this.studentInformationRepository.existsByIdAndUserId(
+            studentInfoId,
+            userId
+        );
         if (!exists) {
             throw new NotFoundError("ไม่พบข้อมูลนักเรียน หรือคุณไม่มีสิทธิ์ลบ");
         }

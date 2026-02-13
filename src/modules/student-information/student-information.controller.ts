@@ -15,6 +15,7 @@ export class StudentInformationController {
 
             res.status(201).json({ message: "สร้างข้อมูลนักเรียนสำเร็จ" });
         } catch (error) {
+            console.log(error)
             handleError(res, error);
         }
     }
