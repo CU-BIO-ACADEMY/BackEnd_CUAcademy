@@ -268,6 +268,7 @@ export const activityUsersTable = pgTable(
             .notNull()
             .default("pending"),
         payment_file_id: uuid(),
+        email_sent: boolean().notNull().default(false),
         created_at: timestamp({ withTimezone: true }).notNull().defaultNow(),
     },
     (table) => [

@@ -90,7 +90,7 @@ const activitiesService = new ActivitiesService(
 );
 const resendService = new ResendService();
 const emailTemplateRepository = new DrizzleEmailTemplateRepository();
-const emailTemplateService = new EmailTemplateService(emailTemplateRepository, activitiesService, resendService);
+const emailTemplateService = new EmailTemplateService(emailTemplateRepository, activitiesService, resendService, activityUserService);
 const activityController = new ActivityController(activitiesService, emailTemplateService);
 
 const activityTagsRepository = new DrizzleActivityTagsRepository();

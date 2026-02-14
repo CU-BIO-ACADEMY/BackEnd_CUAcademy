@@ -70,6 +70,10 @@ export class ActivityUserService {
         return this.activityUsersRepository.updatePaymentStatus(id, status);
     }
 
+    async updateEmailSent(ids: string[]): Promise<void> {
+        return this.activityUsersRepository.updateEmailSent(ids);
+    }
+
     async getPendingByScheduleIds(schedule_ids: string[]): Promise<PendingRegistration[]> {
         return this.activityUsersRepository.getPendingByScheduleIds(schedule_ids);
     }

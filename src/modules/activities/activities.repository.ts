@@ -1,5 +1,5 @@
 import { eq, type InferInsertModel, type InferSelectModel } from "drizzle-orm";
-import { activitiesTable, activitySchedulesTable } from "../../lib/drizzle/schema";
+import { activitiesTable } from "../../lib/drizzle/schema";
 import { db } from "../../lib/drizzle";
 
 type CreateActivityType = InferInsertModel<typeof activitiesTable>;

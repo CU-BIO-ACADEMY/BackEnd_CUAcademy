@@ -1,6 +1,11 @@
 import { and, eq, inArray, type InferSelectModel } from "drizzle-orm";
 import { db } from "../../lib/drizzle";
-import { activityUsersTable, filesTable, studentInformationTable, usersTable } from "../../lib/drizzle/schema";
+import {
+    activityUsersTable,
+    filesTable,
+    studentInformationTable,
+    usersTable,
+} from "../../lib/drizzle/schema";
 
 type GetActivityUser = InferSelectModel<typeof activityUsersTable>;
 
@@ -11,6 +16,7 @@ export type RegisteredUserWithInfo = {
     student_information_id: string;
     payment_status: "pending" | "approved" | "rejected";
     payment_file_id: string | null;
+    email_sent: boolean;
     created_at: Date;
     student_info: {
         id: string;
@@ -34,6 +40,7 @@ export type PendingRegistration = {
     student_information_id: string;
     payment_status: string;
     payment_file_id: string | null;
+    email_sent: boolean;
     created_at: Date;
     student_info: {
         id: string;
@@ -56,8 +63,16 @@ export type PendingRegistration = {
 };
 
 export interface ActivityUsersRepository {
-    join(student_information_id: string, schedule_id: string, payment_file_id?: string): Promise<void>;
-    joinMany(student_information_id: string, schedule_ids: string[], payment_file_id?: string): Promise<void>;
+    join(
+        student_information_id: string,
+        schedule_id: string,
+        payment_file_id?: string
+    ): Promise<void>;
+    joinMany(
+        student_information_id: string,
+        schedule_ids: string[],
+        payment_file_id?: string
+    ): Promise<void>;
     leave(student_information_id: string, schedule_id: string): Promise<void>;
     getRegisteredUsers(schedule_id: string): Promise<GetActivityUser[]>;
     getRegisteredUsersWithInfo(schedule_id: string): Promise<RegisteredUserWithInfo[]>;
@@ -65,11 +80,16 @@ export interface ActivityUsersRepository {
     getRegisteredCount(schedule_id: string): Promise<number>;
     getById(id: string): Promise<GetActivityUser | undefined>;
     updatePaymentStatus(id: string, status: "approved" | "rejected"): Promise<void>;
+    updateEmailSent(ids: string[]): Promise<void>;
     getPendingByScheduleIds(schedule_ids: string[]): Promise<PendingRegistration[]>;
 }
 
 export class DrizzleActivityUserRepository implements ActivityUsersRepository {
-    async join(student_information_id: string, schedule_id: string, payment_file_id?: string): Promise<void> {
+    async join(
+        student_information_id: string,
+        schedule_id: string,
+        payment_file_id?: string
+    ): Promise<void> {
         await db.insert(activityUsersTable).values({
             student_information_id,
             schedule_id,
@@ -77,7 +97,11 @@ export class DrizzleActivityUserRepository implements ActivityUsersRepository {
         });
     }
 
-    async joinMany(student_information_id: string, schedule_ids: string[], payment_file_id?: string): Promise<void> {
+    async joinMany(
+        student_information_id: string,
+        schedule_ids: string[],
+        payment_file_id?: string
+    ): Promise<void> {
         if (schedule_ids.length === 0) return;
         await db.insert(activityUsersTable).values(
             schedule_ids.map((schedule_id) => ({
@@ -119,14 +143,8 @@ export class DrizzleActivityUserRepository implements ActivityUsersRepository {
                 studentInformationTable,
                 eq(activityUsersTable.student_information_id, studentInformationTable.id)
             )
-            .innerJoin(
-                usersTable,
-                eq(studentInformationTable.user_id, usersTable.id)
-            )
-            .leftJoin(
-                filesTable,
-                eq(activityUsersTable.payment_file_id, filesTable.id)
-            )
+            .innerJoin(usersTable, eq(studentInformationTable.user_id, usersTable.id))
+            .leftJoin(filesTable, eq(activityUsersTable.payment_file_id, filesTable.id))
             .where(eq(activityUsersTable.schedule_id, schedule_id));
 
         return result.map((row) => ({
@@ -135,25 +153,26 @@ export class DrizzleActivityUserRepository implements ActivityUsersRepository {
             student_information_id: row.activity_user.student_information_id,
             payment_status: row.activity_user.payment_status,
             payment_file_id: row.activity_user.payment_file_id,
+            email_sent: row.activity_user.email_sent,
             created_at: row.activity_user.created_at,
             student_info: row.student_info
                 ? {
-                    id: row.student_info.id,
-                    user_id: row.student_info.user_id,
-                    prefix: row.student_info.prefix,
-                    full_name: row.student_info.full_name,
-                    education_level: row.student_info.education_level,
-                    school: row.student_info.school,
-                    food_allergies: row.student_info.food_allergies
-                }
+                      id: row.student_info.id,
+                      user_id: row.student_info.user_id,
+                      prefix: row.student_info.prefix,
+                      full_name: row.student_info.full_name,
+                      education_level: row.student_info.education_level,
+                      school: row.student_info.school,
+                      food_allergies: row.student_info.food_allergies,
+                  }
                 : null,
             user: row.user
                 ? {
-                    id: row.user.id,
-                    email: row.user.email,
-                    display_name: row.user.display_name,
-                    profile_image_url: row.user.profile_image_url,
-                }
+                      id: row.user.id,
+                      email: row.user.email,
+                      display_name: row.user.display_name,
+                      profile_image_url: row.user.profile_image_url,
+                  }
                 : null,
         }));
     }
@@ -197,6 +216,14 @@ export class DrizzleActivityUserRepository implements ActivityUsersRepository {
             .where(eq(activityUsersTable.id, id));
     }
 
+    async updateEmailSent(ids: string[]): Promise<void> {
+        if (ids.length === 0) return;
+        await db
+            .update(activityUsersTable)
+            .set({ email_sent: true })
+            .where(inArray(activityUsersTable.id, ids));
+    }
+
     async getPendingByScheduleIds(schedule_ids: string[]): Promise<PendingRegistration[]> {
         if (schedule_ids.length === 0) return [];
         const result = await db
@@ -211,14 +238,8 @@ export class DrizzleActivityUserRepository implements ActivityUsersRepository {
                 studentInformationTable,
                 eq(activityUsersTable.student_information_id, studentInformationTable.id)
             )
-            .innerJoin(
-                usersTable,
-                eq(studentInformationTable.user_id, usersTable.id)
-            )
-            .leftJoin(
-                filesTable,
-                eq(activityUsersTable.payment_file_id, filesTable.id)
-            )
+            .innerJoin(usersTable, eq(studentInformationTable.user_id, usersTable.id))
+            .leftJoin(filesTable, eq(activityUsersTable.payment_file_id, filesTable.id))
             .where(
                 and(
                     inArray(activityUsersTable.schedule_id, schedule_ids),
@@ -232,30 +253,31 @@ export class DrizzleActivityUserRepository implements ActivityUsersRepository {
             student_information_id: row.activity_user.student_information_id,
             payment_status: row.activity_user.payment_status,
             payment_file_id: row.activity_user.payment_file_id,
+            email_sent: row.activity_user.email_sent,
             created_at: row.activity_user.created_at,
             student_info: row.student_info
                 ? {
-                    id: row.student_info.id,
-                    user_id: row.student_info.user_id,
-                    prefix: row.student_info.prefix,
-                    full_name: row.student_info.full_name,
-                    education_level: row.student_info.education_level,
-                    school: row.student_info.school,
-                }
+                      id: row.student_info.id,
+                      user_id: row.student_info.user_id,
+                      prefix: row.student_info.prefix,
+                      full_name: row.student_info.full_name,
+                      education_level: row.student_info.education_level,
+                      school: row.student_info.school,
+                  }
                 : null,
             user: row.user
                 ? {
-                    id: row.user.id,
-                    email: row.user.email,
-                    display_name: row.user.display_name,
-                    profile_image_url: row.user.profile_image_url,
-                }
+                      id: row.user.id,
+                      email: row.user.email,
+                      display_name: row.user.display_name,
+                      profile_image_url: row.user.profile_image_url,
+                  }
                 : null,
             payment_file: row.payment_file
                 ? {
-                    id: row.payment_file.id,
-                    url: `${row.payment_file.bucket}/${row.payment_file.key}`,
-                }
+                      id: row.payment_file.id,
+                      url: `${row.payment_file.bucket}/${row.payment_file.key}`,
+                  }
                 : null,
         }));
     }

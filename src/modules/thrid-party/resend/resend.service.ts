@@ -36,6 +36,17 @@ export class ResendService {
             }),
         });
 
+        const dailyQuota = response.headers.get("x-resend-daily-quota");
+        const monthlyQuota = response.headers.get("x-resend-monthly-quota");
+
+        if (monthlyQuota && parseInt(monthlyQuota) >= 3000) {
+            throw new ForbiddenError("ไม่สามารถส่งอีเมลได้ ถึงลิมิตของเดือนนี้แล้ว");
+        }
+
+        if (dailyQuota && parseInt(dailyQuota) >= 100) {
+            throw new ForbiddenError("ไม่สามารถส่งอีเมลได้ ถึงลิมิตของวันนี้แล้ว");
+        }
+
         if (!response.ok) {
             const error = await response.json();
             const message = `Resend: ${JSON.stringify(error)}`;

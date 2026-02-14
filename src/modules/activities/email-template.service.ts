@@ -2,13 +2,15 @@ import { env } from "../../config/env";
 import { NotFoundError } from "../../lib/error";
 import type { ResendService } from "../thrid-party/resend/resend.service";
 import type { ActivitiesService } from "./activities.service";
+import type { ActivityUserService } from "./activity-users.service";
 import type { EmailTemplateRepository, GetEmailTemplateType } from "./email-template.repository";
 
 export class EmailTemplateService {
     constructor(
         private readonly emailTemplateRepository: EmailTemplateRepository,
         private readonly activitiesService: ActivitiesService,
-        private readonly resendService: ResendService
+        private readonly resendService: ResendService,
+        private readonly activityUserService: ActivityUserService
     ) {}
 
     async getByActivityId(activityId: string): Promise<GetEmailTemplateType | undefined> {
@@ -116,6 +118,10 @@ export class EmailTemplateService {
         } else {
             await this.resendService.sendBatchEmails(emails);
         }
+
+        await this.activityUserService.updateEmailSent(
+            targetRegistrations.map((r) => r.id)
+        );
 
         return { sent: emails.length };
     }
