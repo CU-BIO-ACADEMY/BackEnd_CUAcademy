@@ -58,6 +58,7 @@ export const activityRoute = Router()
     )
     .put(
         "/:id/email-template",
+        multerUpload.none(),
         authMiddleware.requireAdmin.bind(authMiddleware),
         activityController.upsertEmailTemplate.bind(activityController) as AuthenticatedRequestHandler
     )
